@@ -25,7 +25,7 @@ fn handle(connection net.TcpConn) {
     // Creating a blank email
     mut email := Email{}
     // Creating data mode for later
-//    mut data_mode := false
+    mut data_mode := false
     // Reading commands
     for {
         // Reading connection 
@@ -50,8 +50,8 @@ fn handle(connection net.TcpConn) {
                     continue
                 }  
                 args += arg
-
             }
+            args += '\n'
             // Replying
             connection.write_str('250 ' + args ) 
             // Getting the sender
@@ -68,7 +68,7 @@ fn handle(connection net.TcpConn) {
             // Adding to our email
             email.from = from
             // Replying
-            connection.write_str('250 OK')
+            connection.write_str('250 OK\n')
         } else if command[0..8] == ['R','C','P','T',' ','T','O',':'] {
             mut to := ''
             // Getting arg
@@ -80,7 +80,29 @@ fn handle(connection net.TcpConn) {
                 }
             }
             email.to << to
-            connection.write_str('250 OK')
+            connection.write_str('250 OK\n')
+        } else if command[0..4] == ['D','A','T','A'] {
+           data_mode = true 
+           connection.write_str('354 Send message content; end with .!\n') 
+        } else if data_mode {
+            mut data := ''
+            for letter in command {
+                    data += letter.str()
+            }
+            if data[0].str() == '.' {
+                if data[1].str() == '!' { 
+                    print('Out of data')
+                    data_mode = false
+                    connection.write_str('250 OK\n')
+                }
+            } else {
+                email.data += data
+            }
+        } else if command[0..4] == ['Q','U','I','T'] {
+            connection.write_str('221 Bye\n')
+            connection.close()
+            break
         }
     }
+    println(email)
 }
