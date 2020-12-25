@@ -1,8 +1,8 @@
 module main
 
-import server
+import smtp_server 
 
 fn main() {
-    server.run()
+    smtp_server.start()
 }
 
