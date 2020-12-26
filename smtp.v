@@ -4,6 +4,8 @@ import net
 import time
 import os
 import json
+import settings 
+import net.http
 
 struct Email {
     pub mut:
@@ -17,18 +19,25 @@ struct Email_file {
         files []string    
 }
 
-pub fn start(email_dir string) {
+fn post_webhook(url string, message string) {
+    http.post(url, '{"content":"$message"}')
+}
+
+
+pub fn start() {
     // Opens port 25
     l := net.listen_tcp(25) or { panic(err) }
     // Wait for request
     for {
         // Accept request
         new_request := l.accept() or { continue } 
-        handle(new_request, email_dir)
+        handle(new_request)
     }
 }
 
-fn handle(connection net.TcpConn, email_dir string) {
+fn handle(connection net.TcpConn) {
+    // Getting settings
+    settingsjson := settings.load()
     // Sending hello
     connection.write_str('220 smtp.juliette.page ESMTP Postfix\n')
     // Creating a blank email
@@ -117,14 +126,26 @@ fn handle(connection net.TcpConn, email_dir string) {
     }
     // Saving email
     time_now := time.now().format_ss_milli()
-    email_file_name := '$email_dir/email${time_now}.json'
-    mut email_file := os.create(email_file_name) or {panic('Incorrect settings! Unable to create file') }
+    email_file_name := '${settingsjson.email_dir}/email${time_now}.json'
+    mut email_file := os.create(email_file_name) or {
+        error := 'Incorrect settings! Unable to create file in ${settingsjson.email_dir}'
+        post_webhook(settingsjson.webhook, '${error}. Server has **stopped** please fix that error!')
+        panic(error)
+    }
     email_file.write_str(json.encode(email)) 
     email_file.close()
     // Adding to the list
-    email_list_file_name := '$email_dir/emails.json'
-    list_contents := os.read_file(email_list_file_name) or {panic('unable to read emails.json!')}
-    mut list := json.decode(Email_file, list_contents) or {panic('unable to parse mails.json json')}
+    email_list_file_name := '${settingsjson.email_dir}/emails.json'
+    list_contents := os.read_file(email_list_file_name) or {
+        error := 'Unable to read ${settingsjson.email_dir}/emails.json!'
+        post_webhook(settingsjson.webhook, '${error}. Server has **stopped** please fix that error!')
+        panic(error)
+    }
+    mut list := json.decode(Email_file, list_contents) or {
+        error := 'Unable to parse ${settingsjson.email_dir}/emails.json json'
+        post_webhook(settingsjson.webhook, '${error}. Server has **stopped** please fix that error!')
+        panic(error)
+    }
     list.files << 'email${time_now}.json'
     // saving
     os.write_file(email_list_file_name, json.encode(list))
