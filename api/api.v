@@ -6,7 +6,7 @@ import os
 import json
 
 const (
-	port = 8082
+	port = 80 
 )
 
 struct Email {
@@ -80,7 +80,9 @@ fn authentication(key string) bool {
 
 pub fn (mut app App) email() vweb.Result {
     // Getting id
-    id := app.vweb.query["id"]
+    mut id := app.vweb.query["id"]
+    // Replacing spaces
+    id = id.replace('%20', ' ')
     // Seeing if id is safe
     if safe_string(id) {} else {
         return app.vweb.json('{"error": "string is unsafe!"}')
