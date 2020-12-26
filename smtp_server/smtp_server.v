@@ -25,7 +25,7 @@ struct Discordwebhook {
 
 fn post_webhook(url string, message string) {
     content := Discordwebhook{content:message}
-    http.post(url, json.encode(content))
+    http.post_json(url, json.encode(content))
 }
 
 
