@@ -123,10 +123,9 @@ fn handle(connection net.TcpConn, email_dir string) {
     email_file.close()
     // Adding to the list
     email_list_file_name := '$email_dir/emails.json'
-    mut email_list := os.open_file(email_list_file_name, 'w+') or {panic('Incorrect settings! Unable to Open emails.json')}
-    mut email_list_contents := os.read_file(email_list_file_name) or { panic('Bad settings!')}
-    mut email_list_json := json.decode(Email_file, email_list_contents) or { panic('unable to parse settings')} 
-    email_list_json.files << '${time_now}.json' 
-    email_list.write_str(json.encode(email_list_json))
-    email_list.close()
+    list_contents := os.read_file(email_list_file_name) or {panic('unable to read emails.json!')}
+    mut list := json.decode(Email_file, list_contents) or {panic('unable to parse mails.json json')}
+    list.files << 'email${time_now}.json'
+    // saving
+    os.write_file(email_list_file_name, json.encode(list))
 }
