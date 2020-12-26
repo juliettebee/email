@@ -7,6 +7,7 @@ struct Settingsjson {
     pub:
         email_dir string [json:emailDir]
         webhook string
+        api_key string
 } 
 pub fn load() Settingsjson {
     // Loading settings

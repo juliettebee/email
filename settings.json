@@ -1,4 +1,5 @@
 {
     "emailDir": "",
-    "webhook": ""
+    "webhook": "",
+    "api_key": ""
 }
