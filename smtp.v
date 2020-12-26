@@ -49,7 +49,7 @@ fn handle(connection net.TcpConn, email_dir string) {
         command = command.map(it.to_upper())
         // Checking commands
         // Checking to see if its hello
-        if command[0..4] == ['H','E','L','O'] {
+        if command[0..4] == ['H','E','L','O'] || command[0..4] == ['E','H','L','O']{
             // Getting args
             mut args :=  ''
             for arg in command[5..command.len] {
@@ -64,7 +64,7 @@ fn handle(connection net.TcpConn, email_dir string) {
             // Replying
             connection.write_str('250 ' + args ) 
             // Getting the sender
-        } else if command[0..10] == ['M','A','I','L',' ','F','R','O','M',':'] {
+        }  else if command[0..10] == ['M','A','I','L',' ','F','R','O','M',':'] {
             mut from := ''
             // Getting arg
             for letter in command[11..command.len] {
