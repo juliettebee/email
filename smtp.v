@@ -48,8 +48,23 @@ fn handle(connection net.TcpConn, email_dir string) {
         // Then making it upper case
         command = command.map(it.to_upper())
         // Checking commands
+        // Seeing if its data mode first as n matter what data wwiill always be adde
+        if data_mode {
+            // Getting data
+            mut data := ''
+            for letter in command {
+                    data += letter.str()
+            }
+            // Seeing if they endded it
+            if '\r\n.\r\n' in data {
+                data_mode = false
+                connection.write_str('250 OK\n')
+            } else {
+                email.data += data
+            }
+
         // Checking to see if its hello
-        if command[0..4] == ['H','E','L','O'] || command[0..4] == ['E','H','L','O']{
+        } else if command[0..4] == ['H','E','L','O'] || command[0..4] == ['E','H','L','O']{
             // Getting args
             mut args :=  ''
             for arg in command[5..command.len] {
@@ -93,24 +108,7 @@ fn handle(connection net.TcpConn, email_dir string) {
             // Enabling data modde if user requests
         } else if command[0..4] == ['D','A','T','A'] {
            data_mode = true 
-           connection.write_str('354 Send message content; end with .!\n') 
-        } else if data_mode {
-            // Getting data
-            mut data := ''
-            for letter in command {
-                    data += letter.str()
-            }
-            // Seeing if they endded it
-            if data[0].str() == '.' {
-                if data[1].str() == '!' { 
-                    print('Out of data')
-                    data_mode = false
-                    connection.write_str('250 OK\n')
-                }
-            } else {
-                email.data += data
-            }
-            // Quit command
+           connection.write_str('354 End data with <CR><LF>.<CR><LF>\n') 
         } else if command[0..4] == ['Q','U','I','T'] {
             connection.write_str('221 Bye\n')
             connection.close()
@@ -119,7 +117,7 @@ fn handle(connection net.TcpConn, email_dir string) {
     }
     // Saving email
     time_now := time.now().format_ss_milli()
-    email_file_name := '$email_dir/${time_now}.json'
+    email_file_name := '$email_dir/email${time_now}.json'
     mut email_file := os.create(email_file_name) or {panic('Incorrect settings! Unable to create file') }
     email_file.write_str(json.encode(email)) 
     email_file.close()
