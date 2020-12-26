@@ -19,8 +19,13 @@ struct Email_file {
         files []string    
 }
 
+struct Discordwebhook {
+    content string
+}
+
 fn post_webhook(url string, message string) {
-    http.post(url, '{"content":"$message"}')
+    content := Discordwebhook{content:message}
+    http.post(url, json.encode(content))
 }
 
 
