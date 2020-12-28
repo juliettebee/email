@@ -132,18 +132,6 @@ pub fn (mut app App) emails() vweb.Result {
    return app.vweb.json(json.encode(as_json))
 }
 
-pub fn (mut app App) send() vweb.Result {
-    auth := app.vweb.query["auth"]
-    if !authentication(auth) {
-        return app.vweb.json('{"error":"Please authenticate"}')
-    }
-    raw_json := app.vweb.form["json"]
-    req := json.decode(Email, raw_json) or { return app.vweb.json('{"error":"Bad json in the json form"}')
-    // Sending email in new thread as connection could be very long
-    go send_email(req)    
-    return app.vweb.json('{"ok":"sending"}')
-}
 
-fn send_email(email Email) {
 
-}
+

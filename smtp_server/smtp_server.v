@@ -31,7 +31,12 @@ fn post_webhook(url string, message string) {
 
 pub fn start() {
     // Opens port 25
-    l := net.listen_tcp(25) or { panic(err) }
+    l := net.listen_tcp(25) or { 
+        // Getting settings
+        settingsjson := settings.load()
+        post_webhook(settingsjson.webhook, 'Server is unable to listen to new emails aand has crashed!')
+        panic(err) 
+    }
     // Wait for request
     for {
         // Accept request
