@@ -60,8 +60,8 @@ fn handle(connection net.TcpConn) {
         mut buf := []byte{len:100}
         connection.read(mut buf) or { 
             connection.close()
-            println('Error reading connection : $err. Connection has been dropped!')
-            post_webhook(settingsjson.webhook, 'Error reading connection $err. Connection has been dropped!')    
+            println('Error reading connection : ${err}. Connection has been dropped!')
+            post_webhook(settingsjson.webhook, 'Error reading connection ${err}. Connection has been dropped!')    
             return
         }
         // Converting to a string array
