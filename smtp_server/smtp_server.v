@@ -137,6 +137,9 @@ fn handle(connection net.TcpConn) {
             connection.write_str('221 Bye\n')
             connection.close()
             break
+        } else {
+            println('Server sent the invalid command of $command')
+            connection.write_str('500 I dont understand that command\n')
         }
     }
     // Saving email
