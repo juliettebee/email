@@ -20,9 +20,7 @@ struct Emails {
 }
 
 struct App {
-pub mut:
-	vweb vweb.Context 
-	cnt  int
+	vweb.Context 
 }
 
 pub fn start() {
@@ -37,7 +35,7 @@ pub fn (mut app App) init() {
 }
 
 pub fn (mut app App) index() vweb.Result {
-    return app.vweb.text('Hello world from vweb')
+    return app.text('API is up')
 }
 
 // Sees if the string is safe (if it includes '/', '../', '~', etc)
@@ -80,56 +78,56 @@ fn authentication(key string) bool {
 
 pub fn (mut app App) email() vweb.Result {
     // Getting id
-    mut id := app.vweb.query["id"]
+    mut id := app.query["id"]
     // Replacing spaces
     id = id.replace('%20', ' ')
     // Seeing if id is safe
     if safe_string(id) {} else {
-        return app.vweb.json('{"error": "string is unsafe!"}')
+        return app.json('{"error": "string is unsafe!"}')
     }
     // Getting auth key
-    auth := app.vweb.query["auth"]
+    auth := app.query["auth"]
     if !authentication(auth) {
-       return app.vweb.json('{"error":"Please authenticate"}')
+       return app.json('{"error":"Please authenticate"}')
     }
     // Seeing if theres an id
     if id.len > 0 {
     } else {
-        return app.vweb.json('{"error":"id query is needed"}')
+        return app.json('{"error":"id query is needed"}')
     }
     // Getting settings
     settingsjson := settings.load()
     // Getting email
     email_contents := os.read_file('${settingsjson.email_dir}/$id') or {
-       return app.vweb.json('{"error":"unable to get file"}')
+       return app.json('{"error":"unable to get file"}')
     } 
     // Parsing as json
     as_json := json.decode(Email, email_contents) or {
-        return app.vweb.json('{"error":"unable to parse email"}')
+        return app.json('{"error":"unable to parse email"}')
     }
     // returning
-    return app.vweb.json(json.encode(as_json))
+    return app.json(json.encode(as_json))
 }
 
 pub fn (mut app App) emails() vweb.Result {
     // Getting auth key
-    auth := app.vweb.query["auth"]
+    auth := app.query["auth"]
     // Seeing if theyre authenticated
     if !authentication(auth) {
-        return app.vweb.json('{"error":"Please authenticate"}')
+        return app.json('{"error":"Please authenticate"}')
    } 
    // Getting settings
    settingsjson := settings.load()
    // Getting emails
    emails_contents := os.read_file('${settingsjson.email_dir}/emails.json') or {
-        return app.vweb.json('{"error":"unable to get file"}')
+        return app.json('{"error":"unable to get file"}')
    }
    // Parsing
    as_json := json.decode(Emails, emails_contents) or {
-        return app.vweb.json('{"error":"unable to parse email"}')
+        return app.json('{"error":"unable to parse email"}')
    }
    // returning
-   return app.vweb.json(json.encode(as_json))
+   return app.json(json.encode(as_json))
 }
 
 
