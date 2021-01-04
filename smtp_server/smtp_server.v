@@ -168,5 +168,5 @@ fn handle(connection net.TcpConn) {
     // saving
     os.write_file(email_list_file_name, json.encode(list))
     // Alerting user about new email
-    post_webhook(settingsjson.webhook, '${email.from} sent you an email! https://${settingsjson.domain}/email?id=${email_file_name}')
+    post_webhook(settingsjson.webhook, '${email.from} sent you an email! https://${settingsjson.domain}/email?id=email${time_now}.json')
 }
