@@ -3,7 +3,7 @@ module smtp_server
 import net
 import time
 import os
-import json
+import json 
 import settings 
 import net.http
 
@@ -19,13 +19,8 @@ struct Email_file {
         files []string    
 }
 
-struct Discordwebhook {
-    content string
-}
-
 fn post_webhook(url string, message string) {
-    content := Discordwebhook{content:message}
-    http.post_json(url, json.encode(content))
+    http.post_json(url, '{"content":"${message}"}')
 }
 
 
@@ -150,7 +145,8 @@ fn handle(connection net.TcpConn) {
         post_webhook(settingsjson.webhook, '${error}. Server has **stopped** please fix that error!')
         panic(error)
     }
-    email_file.write_str(json.encode(email)) 
+    encoded := json.encode(email)
+    email_file.write_str(encoded) 
     email_file.close()
     // Adding to the list
     email_list_file_name := '${settingsjson.email_dir}/emails.json'
@@ -166,7 +162,8 @@ fn handle(connection net.TcpConn) {
     }
     list.files << 'email${time_now}.json'
     // saving
-    os.write_file(email_list_file_name, json.encode(list))
+    encoded_list := json.encode(list)
+    os.write_file(email_list_file_name, encoded_list)
     // Alerting user about new email
     post_webhook(settingsjson.webhook, '${email.from} sent you an email! https://${settingsjson.domain}/email?id=email${time_now}.json')
 }

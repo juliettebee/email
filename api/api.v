@@ -106,7 +106,8 @@ pub fn (mut app App) email() vweb.Result {
         return app.json('{"error":"unable to parse email"}')
     }
     // returning
-    return app.json(json.encode(as_json))
+    encoded := json.encode(as_json)
+    return app.json(encoded)
 }
 
 pub fn (mut app App) emails() vweb.Result {
@@ -127,7 +128,8 @@ pub fn (mut app App) emails() vweb.Result {
         return app.json('{"error":"unable to parse email"}')
    }
    // returning
-   return app.json(json.encode(as_json))
+   encoded := json.encode(as_json)
+   return app.json(encoded)
 }
 
 
