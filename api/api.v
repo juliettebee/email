@@ -4,6 +4,7 @@ import vweb
 import settings
 import os
 import json
+import smtp_sender
 
 const (
 	port = 80 
@@ -132,6 +133,14 @@ pub fn (mut app App) emails() vweb.Result {
    return app.json(encoded)
 }
 
+[post]
+pub fn (mut app App) send() vweb.Result {
+    mut server := app.query["server"]
+    mut from := app.query["from"]
+    mut to := app.query["to"]
+    mut subject := app.query["subject"]
+    mut body := app.query["body"]
 
-
-
+    smtp_sender.send(server, from, to, subject, body)
+    return app.text('Ok')
+}
