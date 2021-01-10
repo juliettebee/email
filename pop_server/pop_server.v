@@ -136,7 +136,7 @@ fn handle(conn net.TcpConn) {
 				    args += arg
 			    }
                 // Deleting
-                list.pop_files.delete(int(args)) 
+                list.pop_files.delete(args.int()) 
                 // Saving
                 encoded := json.encode(list)
                 os.write_file('${settingsjson.email_dir}/emails.json', encoded) 
