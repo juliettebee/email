@@ -3,6 +3,7 @@ A simple email server I made as I wasnt able to find any email servers with my u
 ## Should you use this
 **No** probably not. This is not optimized at all and one wrong json file will cause the whole thing to panic and stop. 
 ## Setup 
+0) Open ports 25 and 80 
 1) Create a directory where you want your emails to be saved, I want mine to be in `~/emails/`. 
 2) Next create `emails.json` in that directory then put in `{"files":[]}` into it. Next get the exact path of the folder by running `pwd` copy that. 
 3) Then clone this repo. 
