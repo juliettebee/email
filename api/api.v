@@ -133,13 +133,18 @@ pub fn (mut app App) emails() vweb.Result {
    return app.json(encoded)
 }
 
-[post]
 pub fn (mut app App) send() vweb.Result {
-    mut server := url_decode(app.query["server"])
-    mut from := url_decode(app.query["from"])
-    mut to := url_decode(app.query["to"])
-    mut subject := url_decode(app.query["subject"])
-    mut body := url_decode(app.query["body"])
+    // Getting auth key
+    auth := app.query["auth"]
+    // Seeing if theyre authenticated
+    if !authentication(auth) {
+        return app.json('{"error":"Please authenticate"}')
+    }
+    server := url_decode(app.query["server"])
+    from := url_decode(app.query["from"])
+    to := url_decode(app.query["to"])
+    subject := url_decode(app.query["subject"])
+    body := url_decode(app.query["body"])
 
     go smtp_sender.send(server, from, to, subject, body)
     return app.text('Email queued')
