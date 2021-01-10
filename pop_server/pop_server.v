@@ -147,8 +147,15 @@ fn handle(conn net.TcpConn) {
             conn.write_str('+OK bye!\n')
             conn.close()
             // Deleting deleted things
-            for index in indexes {
-                list.pop_files.delete(index) 
+            mut i := indexes.len
+            i--
+            for i > 0 {
+                list.pop_files.delete(indexes[i]) 
+                i--
+            }
+            // If they want to delete 0 it wont work as the loop only goes to 1
+            if 0 in indexes {
+                list.pop_files.delete(0)
             }
             // Saving
             encoded := json.encode(list)
