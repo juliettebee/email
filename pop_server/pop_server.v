@@ -60,6 +60,8 @@ fn handle(conn net.TcpConn) {
 			value: val.data
         }
 	}
+    // Creating a blank array of indexes that will need to be deleted
+    mut indexes := []int{}
 	// Reading commands
 	for {
 		// Reading connection
@@ -135,17 +137,21 @@ fn handle(conn net.TcpConn) {
                 for arg in command[5..command.len] {
 				    args += arg
 			    }
-                // Deleting
-                list.pop_files.delete(args.int()) 
-                // Saving
-                encoded := json.encode(list)
-                os.write_file('${settingsjson.email_dir}/emails.json', encoded) 
+                // Adding to list
+                indexes << args.int()
                 conn.write_str('+OK deleted \n')
             }
             conn.write_str('-ERR please login')
         } else if command[0..4] == ['Q','U','I','T'] {
             conn.write_str('+OK bye!\n')
             conn.close()
+            // Deleting deleted things
+            for index in indexes {
+                list.pop_files.delete(index) 
+            }
+            // Saving
+            encoded := json.encode(list)
+            os.write_file('${settingsjson.email_dir}/emails.json', encoded) 
         } else {
             conn.write_str('-ERR invalid command\n')
         }
