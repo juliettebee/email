@@ -140,8 +140,9 @@ fn handle(conn net.TcpConn) {
                 // Adding to list
                 indexes << args.int()
                 conn.write_str('+OK deleted \n')
+            } else {
+                conn.write_str('-ERR please login')
             }
-            conn.write_str('-ERR please login')
         } else if command[0..4] == ['Q','U','I','T'] {
             conn.write_str('+OK bye!\n')
             conn.close()
