@@ -17,7 +17,7 @@ struct Settingsenabled {
     pub:
         smtp_server bool [json:smtpServer]
         api bool
-        pop string
+        pop bool 
 }
 
 pub fn load() Settingsjson {
