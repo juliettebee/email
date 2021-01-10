@@ -141,8 +141,8 @@ pub fn (mut app App) send() vweb.Result {
     mut subject := url_decode(app.query["subject"])
     mut body := url_decode(app.query["body"])
 
-    smtp_sender.send(server, from, to, subject, body)
-    return app.text('Ok')
+    go smtp_sender.send(server, from, to, subject, body)
+    return app.text('Email queued')
 }
 
 fn url_decode(s string) string {
