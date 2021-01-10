@@ -3,8 +3,10 @@
     "webhook": "",
     "api_key": "",
     "domain": "",
+    "popPass": "",
     "enabledModules": [
         "smtpServer": true,
-        "api": true
+        "api": true,
+        "pop": true
     ]
 }

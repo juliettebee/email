@@ -10,12 +10,14 @@ struct Settingsjson {
         api_key string
         domain string
         enabled Settingsenabled [json:enabledModules]
+        pop_pass string [json:popPass
 } 
 
 struct Settingsenabled {
     pub:
         smtp_server bool [json:smtpServer]
         api bool
+        pop string
 }
 
 pub fn load() Settingsjson {

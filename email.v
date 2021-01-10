@@ -16,6 +16,10 @@ fn main() {
     if settings.enabled.api {
         go api.start()
     }
+    // Seeing if pop is enabled
+    if settings.enabled.pop {
+        go pop_server.start()
+    }
     // This is needed so it doesnt close
     for { }
 }
