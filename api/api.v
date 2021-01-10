@@ -135,12 +135,38 @@ pub fn (mut app App) emails() vweb.Result {
 
 [post]
 pub fn (mut app App) send() vweb.Result {
-    mut server := app.query["server"]
-    mut from := app.query["from"]
-    mut to := app.query["to"]
-    mut subject := app.query["subject"]
-    mut body := app.query["body"]
+    mut server := url_decode(app.query["server"])
+    mut from := url_decode(app.query["from"])
+    mut to := url_decode(app.query["to"])
+    mut subject := url_decode(app.query["subject"])
+    mut body := url_decode(app.query["body"])
 
     smtp_sender.send(server, from, to, subject, body)
     return app.text('Ok')
+}
+
+fn url_decode(s string) string {
+    mut ret := ''
+    ret = s.replace('%3A', ':')
+    ret = s.replace('%2F', '/')
+    ret = s.replace('%3F', '?')
+    ret = s.replace('%23', '#')
+    ret = s.replace('%5B', '[')
+    ret = s.replace('%5D', ']')
+    ret = s.replace('%40', '@')
+    ret = s.replace('%21', '!')
+    ret = s.replace('%24', '$')
+    ret = s.replace('%26', '&')
+    ret = s.replace('%27', '\'')
+    ret = s.replace('%28', '(')
+    ret = s.replace('%29', ')')
+    ret = s.replace('%2A', '*')
+    ret = s.replace('%2B', '+')
+    ret = s.replace('%2C', ',')
+    ret = s.replace('%3B', ';')
+    ret = s.replace('%3D', '=')
+    ret = s.replace('%25', '%')
+    ret = s.replace('%20', ' ')
+    ret = s.replace('+', ' ')
+    return ret
 }
