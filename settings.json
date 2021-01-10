@@ -2,5 +2,9 @@
     "emailDir": "",
     "webhook": "",
     "api_key": "",
-    "domain": ""
+    "domain": "",
+    "enabledModules": [
+        "smtpServer": true,
+        "api": true
+    ]
 }

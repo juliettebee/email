@@ -8,7 +8,7 @@ A simple email server I made as I wasnt able to find any email servers with my u
 3) Then clone this repo. 
 4) Edit `settings.json` and put in the path into `"emailDir"`. 
 5) Then put in a webhook or leave it blank if you don't want one. 
-6) Then enter an api key **this is needed** if you dont have it **anyone will be able to read your emails**. 
+6) Then enter an api key **this is needed** if you dont have it **anyone will be able to read your emails** (If api is enabled). 
 7) Then put in your domain you want to have at the end of the user@domain.tld
 8) Then compile the project with `v -prod -autofree .` 
 9) then run it with `./email`. 
@@ -18,6 +18,8 @@ If you want to use a custom domain you're going to have to setup dns.
 2) Then create an mx record with the name of `@` and the data to `email.[your domain]`. 
 3) Then create a text record with the name of `@` and the value of `v=spf1 mx -all`
 
+## Settings
+You can enabled/disable parts of the app if you want in the settings. By default everything is enabled.
 ## API
 Replace the url query auth with your auth key in settings.json
 ### `[ip of your server]/emails?auth=[auth key]`

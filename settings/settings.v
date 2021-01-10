@@ -9,7 +9,15 @@ struct Settingsjson {
         webhook string
         api_key string
         domain string
+        enabled Settingsenabled [json:enabledModules]
 } 
+
+struct Settingsenabled {
+    pub:
+        smtp_server bool [json:smtpServer]
+        api bool
+}
+
 pub fn load() Settingsjson {
     // Loading settings
     filename := './settings.json'
