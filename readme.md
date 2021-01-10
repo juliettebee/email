@@ -17,3 +17,15 @@ If you want to use a custom domain you're going to have to setup dns.
 1) Go to your registars dns settings then add an A record with the name of `email` and set the value to the ip of your server. 
 2) Then create an mx record with the name of `@` and the data to `email.[your domain]`. 
 3) Then create a text record with the name of `@` and the value of `v=spf1 mx -all`
+
+## API
+Replace the url query auth with your auth key in settings.json
+### `[ip of your server]/emails?auth=[auth key]`
+Get a list of email ids
+Example: `[ip]/emails?auth=[auth key]`
+### `[ip of your server]/email?id=[id from emails]&auth=[auth key]`
+Get a specific email by id
+Example: `[ip]/email?auth=[auth key]&id=email2020-12-30%2008:55:05.256.json`
+### `[ip of your server]/send?server=[smtp server of the domain of the email you want to send]&from=[who you want it to be from]&to=[who you want to send it to]&subject=[subject of email]&body=[body of email]&auth=[auth key]
+Send an email
+Example: `[ip of your server]/send?server=gmail-smtp-in.l.google.com&from=juliette%40juliette.page&to=[gmail user]%40gmail.com&subject=Hi&body=test&auth=helloyesthisisatest`
