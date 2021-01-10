@@ -29,6 +29,6 @@ Example: `[ip]/emails?auth=[auth key]`
 ### `[ip of your server]/email?id=[id from emails]&auth=[auth key]`
 Get a specific email by id
 Example: `[ip]/email?auth=[auth key]&id=email2020-12-30%2008:55:05.256.json`
-### `[ip of your server]/send?server=[smtp server of the domain of the email you want to send]&from=[who you want it to be from]&to=[who you want to send it to]&subject=[subject of email]&body=[body of email]&auth=[auth key]
+### `[ip of your server]/send?server=[smtp server of the domain of the email you want to send]&from=[who you want it to be from]&to=[who you want to send it to]&subject=[subject of email]&body=[body of email]&auth=[auth key]`
 Send an email
-Example: `[ip of your server]/send?server=gmail-smtp-in.l.google.com&from=juliette%40juliette.page&to=[gmail user]%40gmail.com&subject=Hi&body=test&auth=helloyesthisisatest`
+Example: `[ip of your server]/send?server=gmail-smtp-in.l.google.com&from=juliette%40juliette.page&to=[gmail user]%40gmail.com&subject=Hi&body=test&auth=[auth key]`
