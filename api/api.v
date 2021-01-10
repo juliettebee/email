@@ -147,26 +147,6 @@ pub fn (mut app App) send() vweb.Result {
 
 fn url_decode(s string) string {
     mut ret := ''
-    ret = s.replace('%3A', ':')
-    ret = s.replace('%2F', '/')
-    ret = s.replace('%3F', '?')
-    ret = s.replace('%23', '#')
-    ret = s.replace('%5B', '[')
-    ret = s.replace('%5D', ']')
-    ret = s.replace('%40', '@')
-    ret = s.replace('%21', '!')
-    ret = s.replace('%24', '$')
-    ret = s.replace('%26', '&')
-    ret = s.replace('%27', '\'')
-    ret = s.replace('%28', '(')
-    ret = s.replace('%29', ')')
-    ret = s.replace('%2A', '*')
-    ret = s.replace('%2B', '+')
-    ret = s.replace('%2C', ',')
-    ret = s.replace('%3B', ';')
-    ret = s.replace('%3D', '=')
-    ret = s.replace('%25', '%')
-    ret = s.replace('%20', ' ')
-    ret = s.replace('+', ' ')
+    ret = s.replace('%3A', ':').replace('%2F', '/').replace('%3F', '?').replace('%23', '#').replace('%5B', '[').replace('%5D', ']').replace('%21', '!').replace('%40', '@').replace('%24', '$').replace('%26', '&').replace('%27', '\'').replace('%28', '(').replace('%29', ')').replace('%2A', '*').replace('%2B', '+').replace('%2C', ',').replace('%3B', ';').replace('%3D', '=').replace('%25', '%').replace('%20', ' ').replace('+', ' ')
     return ret
 }
