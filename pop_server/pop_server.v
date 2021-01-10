@@ -83,9 +83,15 @@ fn handle(conn net.TcpConn) {
 			// Because we dont have usernames we just tell them to continue
 			conn.write_str('+OK User name accepted\n')
 		} else if command[0..4] == ['P','A','S','S'] {
-			mut args := ''
+			mut args := string{}
 			for arg in command[5..command.len] {
-				args += arg
+                if arg == '\n' {
+                    break
+                } else if arg == '\r' {
+                    continue
+                } else {
+                    args += arg.str()
+                }
 			}
 			// I would prefer generate pop pass when server starts for the first time but for dev gonna just use one in settings
 			if args == settingsjson.pop_pass {
@@ -125,8 +131,10 @@ fn handle(conn net.TcpConn) {
             // TODO: make this work
             conn.write_str('+OK deleted \n')
         } else if command[0..4] == ['Q','U','I','T'] {
-            conn.write_str('+OK bye!')
+            conn.write_str('+OK bye!\n')
             conn.close()
+        } else {
+            conn.write_str('-ERR invalid command')
         }
 	}
 }
