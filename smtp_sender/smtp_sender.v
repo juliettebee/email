@@ -17,7 +17,7 @@ pub fn send(server string, from string, to string, subject string, body string) 
     from_command := 'MAIL FROM:<${from}>\r\n'
     conn.write(from_command.bytes()) or { panic(err) }
     // Sening to
-    to_command := 'MAIL TO:<${to}>\r\n'
+    to_command := 'RCPT TO:<${to}>\r\n'
     conn.write(to_command.bytes()) or { panic(err) }
     // Sending ddtaa
     data_command := 'DATA\r\n'
