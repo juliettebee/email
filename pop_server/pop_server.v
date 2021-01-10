@@ -134,7 +134,7 @@ fn handle(conn net.TcpConn) {
             conn.write_str('+OK bye!\n')
             conn.close()
         } else {
-            conn.write_str('-ERR invalid command')
+            conn.write_str('-ERR invalid command\n')
         }
 	}
 }
