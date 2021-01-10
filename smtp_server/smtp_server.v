@@ -18,6 +18,7 @@ struct Email {
 struct Email_file {
     pub mut:
         files []string    
+        pop_files []string
 }
 
 fn post_webhook(url string, message string) {
@@ -177,6 +178,7 @@ fn handle(connection net.TcpConn, ip string) {
         panic(error)
     }
     list.files << 'email${time_now}.json'
+    list.pop_files << 'email${time_now}.json'
     // saving
     encoded_list := json.encode(list)
     os.write_file(email_list_file_name, encoded_list)

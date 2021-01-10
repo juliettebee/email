@@ -8,6 +8,7 @@ import settings
 struct Email_file {
 pub mut:
 	files []string
+    pop_files []string
 }
 
 struct Emailfile {
@@ -50,7 +51,7 @@ fn handle(conn net.TcpConn) {
 	mut list := json.decode(Email_file, list_contents) or { panic(err) }
 	// Getting files
 	mut files := []Emailfile{}
-	for filee in list.files {
+	for filee in list.pop_files {
         data := os.read_file('${settingsjson.email_dir}/$filee') or { panic(err) }
         // decoding
         val := json.decode(Emaillfile, data) or { panic(err) } 
@@ -129,7 +130,19 @@ fn handle(conn net.TcpConn) {
         }
         } else if command[0..4] == ['D','E','L','E'] {
             // TODO: make this work
-            conn.write_str('+OK deleted \n')
+            if logged_in {
+                mut args := ''
+                for arg in command[5..command.len] {
+				    args += arg
+			    }
+                // Deleting
+                list.pop_files.delete(int(args)) 
+                // Saving
+                encoded := json.encode(list)
+                os.write_file('${settingsjson.email_dir}/emails.json', encoded) 
+                conn.write_str('+OK deleted \n')
+            }
+            conn.write_str('-ERR please login')
         } else if command[0..4] == ['Q','U','I','T'] {
             conn.write_str('+OK bye!\n')
             conn.close()
