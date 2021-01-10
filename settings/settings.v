@@ -10,7 +10,7 @@ struct Settingsjson {
         api_key string
         domain string
         enabled Settingsenabled [json:enabledModules]
-        pop_pass string [json:popPass
+        pop_pass string [json:popPass]
 } 
 
 struct Settingsenabled {
