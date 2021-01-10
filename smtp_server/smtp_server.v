@@ -12,6 +12,7 @@ struct Email {
         from string
         to []string
         data string
+        from_ip string
 }
 
 struct Email_file {
@@ -25,10 +26,11 @@ fn post_webhook(url string, message string) {
 
 
 pub fn start() {
+    // Getting settings
+    settingsjson := settings.load()
+
     // Opens port 25
     l := net.listen_tcp(25) or { 
-        // Getting settings
-        settingsjson := settings.load()
         post_webhook(settingsjson.webhook, 'Server is unable to listen to new emails aand has crashed!')
         panic(err) 
     }
@@ -36,17 +38,27 @@ pub fn start() {
     for {
         // Accept request
         new_request := l.accept() or { continue } 
-        handle(new_request)
+        // Seeing if ip is blocked
+        addr := new_request.sock.address() or { 
+            new_request.close() 
+            continue 
+        }
+        if addr.saddr in settingsjson.blocked_ips {
+           new_request.close()
+           continue
+        } 
+        handle(new_request, addr.saddr)
     }
 }
 
-fn handle(connection net.TcpConn) {
+fn handle(connection net.TcpConn, ip string) {
     // Getting settings
     settingsjson := settings.load()
     // Sending hello
     connection.write_str('220 smtp.juliette.page ESMTP Postfix\n')
     // Creating a blank email
     mut email := Email{}
+    email.from_ip = ip 
     // Creating data mode for later
     mut data_mode := false
     // Reading commands
@@ -107,6 +119,10 @@ fn handle(connection net.TcpConn) {
                 } else {
                     from += letter.str()
                 }
+            }
+            if from in settingsjson.blocked_domains {
+                connection.close()
+                return
             }
             // Adding to our email
             email.from = from

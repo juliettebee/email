@@ -4,9 +4,11 @@
     "api_key": "",
     "domain": "",
     "popPass": "",
-    "enabledModules": [
+    "enabledModules": {
         "smtpServer": true,
         "api": true,
         "pop": true
-    ]
+    },
+    "blockedDomains": [],
+    "blockedIps": []
 }

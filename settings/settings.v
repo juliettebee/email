@@ -11,6 +11,8 @@ struct Settingsjson {
         domain string
         enabled Settingsenabled [json:enabledModules]
         pop_pass string [json:popPass]
+        blocked_domains []string [json:blockedDomains]
+        blocked_ips []string [json:blockedIps]
 } 
 
 struct Settingsenabled {
