@@ -7,6 +7,7 @@ struct Client {
     pub mut:
         con net.TcpConn
         email Email
+        data_mode bool 
 }
 
 struct Email {
@@ -48,7 +49,6 @@ fn handle(con net.TcpConn) {
     con.write_str('220 ${settings.domain} Juliette SMTP\n')
     // Creating variables
     mut c := Client{con: con, email: Email{}}
-    mut data_mode := false
     // Handling commands
     for {
         // Reading input 
@@ -63,10 +63,13 @@ fn handle(con net.TcpConn) {
             command += byre.str() 
         }
         //[FREE]    free(buf)
-        if !data_mode {
+        if !c.data_mode {
             if 'EHLO' in command || 'HELO' in command {
                 c.hello()
                 continue
+            }
+            if 'DATA' in command {
+                c.data()
             }
             command_command := command.split(':')
             //[FREE] free(command)
@@ -82,10 +85,16 @@ fn handle(con net.TcpConn) {
             }
             print(c.email)
             //[FREE] free(command_command)
+        } else {
+            print('data')
+            c.email.data += command
+            if '\r\n.\r\n' in command {
+                c.data_mode = false
+                c.con.write_str('250 OK\n')
+            }
         }
     }
     //[FREE] free(c)
-    //[FREE] free(data_mode)
 }
 
 fn (mut c Client) hello() {
@@ -99,4 +108,10 @@ fn (mut c Client) from(args string) {
 
 fn (mut c Client) to(args string) {
     c.email.to << args
+    c.con.write_str('250 Ok\n')
+}
+
+fn (mut c Client) data() {
+    c.data_mode = true
+    c.con.write_str('354 End data with <CR><LF>.<CR><LF>\n')
 }
