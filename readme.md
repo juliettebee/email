@@ -12,7 +12,7 @@ A simple email server I made as I wasnt able to find any email servers with my u
 6) Then enter an api key **this is needed** if you dont have it **anyone will be able to read your emails** (If api is enabled). 
 7) Then enter a password for pop **this is needed** if you dont have it **anyone will be able to read your emails** (If pop is enabled). 
 8) Then put in your domain you want to have at the end of the user@domain.tld
-9) Then compile the project with `v -prod -autofree .` 
+9) Then compile the project with `v -prod .` 
 10) then run it with `./email`. 
 ### DNS
 If you want to use a custom domain you're going to have to setup dns. 
