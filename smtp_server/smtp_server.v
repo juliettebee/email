@@ -114,10 +114,10 @@ fn handle(con net.TcpConn) {
             }
         }
     }
-    //[FREE] free(c)
     // Saving
+    // Creating a json doc thats just what we collect
     time_now := time.now().format_ss_milli()
-    email_file_name := '${settings.email_dir}/email${time_now}.json'
+    email_file_name := '${settings.email_dir}/email${time_now}.log.json'
     mut email_file := os.create(email_file_name) or {
         error := 'Incorrect settings! Unable to create file in ${settings.email_dir}'
         post_webhook(settings.webhook, '${error}. Server has **stopped** please fix that error!')
@@ -126,8 +126,18 @@ fn handle(con net.TcpConn) {
     }
     encoded := json.encode(c.email)
     email_file.write_str(encoded) 
-    email_file.write_str(encoded)
-    // Adding to list
+    email_file.close()
+    // Saving email
+    email_data_file_name := '${settings.email_dir}/email${time_now}.data.txt'
+    mut email_data_file := os.create(email_data_file_name) or {
+        error := 'Incorrect settings! Unable to create file in ${settings.email_dir}'
+        post_webhook(settings.webhook, '${error}. Server has **stopped** please fix that error!')
+        panic(error)
+        //[FREE] free(error)
+    }
+    email_data_file.write_str(c.email.data)
+    email_data_file.close()
+        // Adding to list
     email_list_file_name := '${settings.email_dir}/emails.json'
     list_contents := os.read_file(email_list_file_name) or {
         error := 'Unable to read ${settings.email_dir}/emails.json!'
@@ -141,8 +151,8 @@ fn handle(con net.TcpConn) {
         panic(error)
         //[FREE] free(error)
     }
-    list.files << 'email${time_now}.json'
-    list.files << 'email${time_now}.json'
+    list.files << 'email${time_now}.data.txt'
+    list.pop_files << 'email${time_now}.data.txt'
     // saving
     encoded_list := json.encode(list)
     os.write_file(email_list_file_name, encoded_list)
@@ -150,14 +160,16 @@ fn handle(con net.TcpConn) {
     from := c.email.from.replace('\r\n','').replace('<','').replace('>','')
     post_webhook(settings.webhook, '${from} sent you an email!')
     //[FREE] free(time_now)
-    //[FREE] free(email_file_name)
-    //[FREE] free(email_file)
+    //[FREE] free(email_data_file)
+    //[FREE] free(email_data_file_name)
     //[FREE] free(encoded)
+    //[FREE] free(email_file_name)
+    //[FREE] free(from)
+    //[FREE] free(settings)
     //[FREE] free(email_list_file_name)
     //[FREE] free(list_contents)
     //[FREE] free(list)
     //[FREE] free(encoded_list)
-    //[FREE] free(from)
     //[FREE] free(c)
 }
 
