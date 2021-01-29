@@ -17,11 +17,6 @@ pub mut:
 	value string 
 }
 
-struct Emaillfile {
-    pub:
-        data string
-}
-
 pub fn start() {
 	// Open port and start listening
 	l := net.listen_tcp(110) or {
@@ -53,11 +48,11 @@ fn handle(conn net.TcpConn) {
 	mut files := []Emailfile{}
 	for filee in list.pop_files {
         data := os.read_file('${settingsjson.email_dir}/$filee') or { panic(err) }
+        save := data.replace('\r\n.\r\n','')
         // decoding
-        val := json.decode(Emaillfile, data) or { panic(err) } 
 		files << Emailfile{
 			size: os.file_size('$settingsjson.email_dir/$filee')
-			value: val.data
+			value: save 
         }
 	}
     // Creating a blank array of indexes that will need to be deleted

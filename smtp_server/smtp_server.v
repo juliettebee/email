@@ -1,187 +1,193 @@
 module smtp_server
 
 import net
+import settings as ssettings
+import json
+import net.http
 import time
 import os
-import json 
-import settings 
-import net.http
+
+struct Client {
+    pub mut:
+        con net.TcpConn
+        email Email
+        data_mode bool 
+}
 
 struct Email {
     pub mut:
         from string
-        to []string
+        to string
         data string
         from_ip string
 }
 
 struct Email_file {
     pub mut:
-        files []string    
+        files []string
         pop_files []string
 }
 
 fn post_webhook(url string, message string) {
-    http.post_json(url, '{"content":"${message}"}')
+    println('message : $message')
+    res := http.post_json(url, '{"content":"${message}"}') or { panic(err) }
+    print(res)
 }
-
 
 pub fn start() {
     // Getting settings
-    settingsjson := settings.load()
-
-    // Opens port 25
-    l := net.listen_tcp(25) or { 
-        post_webhook(settingsjson.webhook, 'Server is unable to listen to new emails aand has crashed!')
-        panic(err) 
-    }
-    // Wait for request
+    settings := ssettings.load()
+    // Open a port and start listening
+    l := net.listen_tcp(25) or { panic(err) }
+    // Waiting for request & handling
     for {
-        // Accept request
-        new_request := l.accept() or { continue } 
-        // Seeing if ip is blocked
-        addr := new_request.sock.address() or { 
-            new_request.close() 
-            continue 
+        new_request := l.accept() or { continue }
+        // Checking if ip is blocked
+        addr := new_request.sock.address() or {
+            new_request.close()
+            continue
         }
-        if addr.saddr in settingsjson.blocked_ips {
+        if addr.saddr in settings.blocked_ips {
            new_request.close()
            continue
-        } 
-        handle(new_request, addr.saddr)
+        }
+        // We are going to handle it concerntly so if we are getting multiple connections we dont have to worry
+        go handle(new_request)
+//[FREE]        free(new_request)
     }
+//[FREE]    free(settings)
 }
 
-fn handle(connection net.TcpConn, ip string) {
-    // Getting settings
-    settingsjson := settings.load()
-    // Sending hello
-    connection.write_str('220 smtp.juliette.page ESMTP Postfix\n')
-    // Creating a blank email
-    mut email := Email{}
-    email.from_ip = ip 
-    // Creating data mode for later
-    mut data_mode := false
-    // Reading commands
+fn handle(con net.TcpConn) {
+    // We need settings
+    settings := ssettings.load()
+    // Lets send info
+    con.write_str('220 ${settings.domain} Juliette SMTP\n')
+    // Creating variables
+    mut c := Client{con: con, email: Email{}}
+    // Handling commands
     for {
-        // Reading connection 
+        // Reading input 
         mut buf := []byte{len:100}
-        connection.read(mut buf) or { 
-            connection.close()
-            println('Error reading connection : ${err}. Connection has been dropped!')
-            post_webhook(settingsjson.webhook, 'Error reading connection ${err}. Connection has been dropped!')    
-            return
+        con.read(mut buf) or {
+            con.write_str('Unable to parse!\n')
+            continue
         }
-        // Converting to a string array
-        mut command := []string{}
+        // Converting
+        mut command := string{}
         for byre in buf {
-            command << byre.str()
+            command += byre.str() 
         }
-        // Then making it upper case
-        command = command.map(it.to_upper())
-        // Checking commands
-        // Seeing if its data mode first as n matter what data wwiill always be adde
-        if data_mode {
-            // Getting data
-            mut data := ''
-            for letter in command {
-                    data += letter.str()
+        //[FREE]    free(buf)
+        if !c.data_mode {
+            // Handle special commands
+            if 'EHLO' in command || 'HELO' in command {
+                c.hello()
+                continue
             }
-            // Seeing if they endded it
-            if '\r\n.\r\n' in data {
-                data_mode = false
-                connection.write_str('250 OK\n')
-            } else {
-                email.data += data
+            if 'DATA' in command {
+                c.data()
             }
-
-        // Checking to see if its hello
-        } else if command[0..4] == ['H','E','L','O'] || command[0..4] == ['E','H','L','O']{
-            // Getting args
-            mut args :=  ''
-            for arg in command[5..command.len] {
-                // Seeing to see if its a new line
-                // New linese are ignored as they mark end of command
-                if arg == '\n' {
-                    continue
-                }  
-                args += arg
+            if 'QUIT' in command {
+                c.con.write_str('221 Bye\n')
+                c.con.close()
+                break
             }
-            args += '\n'
-            // Replying
-            connection.write_str('250 ' + args ) 
-            // Getting the sender
-        }  else if command[0..10] == ['M','A','I','L',' ','F','R','O','M',':'] {
-            mut from := ''
-            // Getting arg
-            for letter in command[11..command.len] {
-                if letter == '\n' {
-                    continue
-                } else {
-                    from += letter.str()
+            command_command := command.split(':')
+            //[FREE] free(command)
+            // Now lets handle command
+            match(command_command[0]) {
+                'MAIL FROM' {
+                    c.from(command_command[1])
+                } 
+                'RCPT TO' {
+                    c.to(command_command[1])
                 }
+                else {}
             }
-            if from in settingsjson.blocked_domains {
-                connection.close()
-                return
-            }
-            // Adding to our email
-            email.from = from
-            // Replying
-            connection.write_str('250 OK\n')
-        } else if command[0..8] == ['R','C','P','T',' ','T','O',':'] {
-            mut to := ''
-            // Getting arg
-            for letter in command[8..command.len] {
-                if letter == '\n' {
-                    continue
-                } else {
-                    to += letter.str()
-                }
-            }
-            email.to << to
-            connection.write_str('250 OK\n')
-            // Enabling data modde if user requests
-        } else if command[0..4] == ['D','A','T','A'] {
-           data_mode = true 
-           connection.write_str('354 End data with <CR><LF>.<CR><LF>\n') 
-        } else if command[0..4] == ['Q','U','I','T'] {
-            connection.write_str('221 Bye\n')
-            connection.close()
-            break
+            //[FREE] free(command_command)
         } else {
-            println('Server sent the invalid command of $command')
-            connection.write_str('500 I dont understand that command\n')
+            c.email.data += command
+            if '\r\n.\r\n' in command {
+                c.data_mode = false
+                c.con.write_str('250 OK\n')
+            }
         }
     }
-    // Saving email
+    // Saving
+    // Creating a json doc thats just what we collect
     time_now := time.now().format_ss_milli()
-    email_file_name := '${settingsjson.email_dir}/email${time_now}.json'
+    email_file_name := '${settings.email_dir}/email${time_now}.log.json'
     mut email_file := os.create(email_file_name) or {
-        error := 'Incorrect settings! Unable to create file in ${settingsjson.email_dir}'
-        post_webhook(settingsjson.webhook, '${error}. Server has **stopped** please fix that error!')
+        error := 'Incorrect settings! Unable to create file in ${settings.email_dir}'
+        post_webhook(settings.webhook, '${error}. Server has **stopped** please fix that error!')
         panic(error)
+        //[FREE] free(error)
     }
-    encoded := json.encode(email)
+    encoded := json.encode(c.email)
     email_file.write_str(encoded) 
     email_file.close()
-    // Adding to the list
-    email_list_file_name := '${settingsjson.email_dir}/emails.json'
-    list_contents := os.read_file(email_list_file_name) or {
-        error := 'Unable to read ${settingsjson.email_dir}/emails.json!'
-        post_webhook(settingsjson.webhook, '${error}. Server has **stopped** please fix that error!')
+    // Saving email
+    email_data_file_name := '${settings.email_dir}/email${time_now}.data.txt'
+    mut email_data_file := os.create(email_data_file_name) or {
+        error := 'Incorrect settings! Unable to create file in ${settings.email_dir}'
+        post_webhook(settings.webhook, '${error}. Server has **stopped** please fix that error!')
         panic(error)
+        //[FREE] free(error)
+    }
+    email_data_file.write_str(c.email.data)
+    email_data_file.close()
+        // Adding to list
+    email_list_file_name := '${settings.email_dir}/emails.json'
+    list_contents := os.read_file(email_list_file_name) or {
+        error := 'Unable to read ${settings.email_dir}/emails.json!'
+        post_webhook(settings.webhook, '${error}. Server has **stopped** please fix that error!')
+        panic(error)
+        //[FREE] free(error)
     }
     mut list := json.decode(Email_file, list_contents) or {
-        error := 'Unable to parse ${settingsjson.email_dir}/emails.json json'
-        post_webhook(settingsjson.webhook, '${error}. Server has **stopped** please fix that error!')
+        error := 'Unable to parse ${settings.email_dir}/emails.json json'
+        post_webhook(settings.webhook, '${error}. Server has **stopped** please fix that error!')
         panic(error)
+        //[FREE] free(error)
     }
-    list.files << 'email${time_now}.json'
-    list.pop_files << 'email${time_now}.json'
+    list.files << 'email${time_now}.data.txt'
+    list.pop_files << 'email${time_now}.data.txt'
     // saving
     encoded_list := json.encode(list)
     os.write_file(email_list_file_name, encoded_list)
     // Alerting user about new email
-    post_webhook(settingsjson.webhook, '${email.from} sent you an email! https://${settingsjson.domain}/email?id=email${time_now}.json')
+    from := c.email.from.replace('\r\n','').replace('<','').replace('>','')
+    post_webhook(settings.webhook, '${from} sent you an email!')
+    //[FREE] free(time_now)
+    //[FREE] free(email_data_file)
+    //[FREE] free(email_data_file_name)
+    //[FREE] free(encoded)
+    //[FREE] free(email_file_name)
+    //[FREE] free(from)
+    //[FREE] free(settings)
+    //[FREE] free(email_list_file_name)
+    //[FREE] free(list_contents)
+    //[FREE] free(list)
+    //[FREE] free(encoded_list)
+    //[FREE] free(c)
+}
+
+fn (mut c Client) hello() {
+    c.con.write_str('220 Hello, Im juliette\n')
+} 
+
+fn (mut c Client) from(args string) {
+    c.email.from = args
+    c.con.write_str('250 Ok\n')
+}
+
+fn (mut c Client) to(args string) {
+    c.email.to += args
+    c.con.write_str('250 Ok\n')
+}
+
+fn (mut c Client) data() {
+    c.data_mode = true
+    c.con.write_str('354 End data with <CR><LF>.<CR><LF>\n')
 }
