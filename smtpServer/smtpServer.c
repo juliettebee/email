@@ -35,7 +35,9 @@ void smtpServer() {
 
 void handleRequest(int accepting) {
     // Creating a blank email
-    Email email = {"unknown", "unknown", "unknown", "unknown", false};
+    Email email = {"unknown", "unknown", "unknown", false};
+    char first[33] = "220 ESMTP Juliette's SMTP server\n";
+    write(accepting, first, sizeof(first)); 
     // Reading connection
     while(1) {
         char buff[1000];
@@ -65,6 +67,8 @@ void handleRequest(int accepting) {
         // Now lets handle normal commands
         if (strstr(command, "MAIL FROM") != NULL)
             mailFromCommand(accepting, &email, args);
+        else if (strstr(command, "RCPT TO") != NULL)
+            rcptToCommand(accepting, &email, args);
     }
 }
 
@@ -75,11 +79,21 @@ void helloCommand(int file) {
 }
 
 void dataCommand(int file, Email *email) {
-    char *message = "354 End data with <CR><LF>.<CR><LF>\n";
-    write(file, message, sizeof(message));
     email->dataMode = true;
+    char message[36] = "354 End data with <CR><LF>.<CR><LF>\n";
+    write(file, message, sizeof(message));
 }
 
 void mailFromCommand(int file, Email *email, char *args) {
     email->from = args;
+    char message[7] = "250 Ok\n";
+    write(file, message, sizeof(message));
 }
+
+void rcptToCommand(int file, Email *email, char *args) {
+    strcat(email->to, args);
+    char message[7] = "250 Ok\n";
+    write(file, message, sizeof(message));
+
+}
+
