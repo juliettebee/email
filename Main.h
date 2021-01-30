@@ -18,3 +18,4 @@ void smtpServer();
 void helloCommand();
 void dataCommand(int file, Email *email); 
 void mailFromCommand(int file, Email *email, char *args);
+void handleRequest(int accepting);

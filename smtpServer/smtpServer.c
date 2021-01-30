@@ -22,20 +22,25 @@ void smtpServer() {
         return;
     }
     // Now lets start accepting!
-    int clientAddrLen = sizeof(clientAddr);
-    int accepting = accept(socketStatus, (struct sockaddr *) &addr, &clientAddrLen);
     while (1) {
-        char buff[1000];
+        int clientAddrLen = sizeof(clientAddr);
+        int accepting = accept(socketStatus, (struct sockaddr *) &addr, &clientAddrLen);
         if (accepting == -1) {
             printf("Error! Unable to accept");
             continue;
-        }
-        // Reading connection
+        } else
+            handleRequest(accepting);
+    }
+}
+
+void handleRequest(int accepting) {
+    // Creating a blank email
+    Email email = {"unknown", "unknown", "unknown", "unknown", false};
+    // Reading connection
+    while(1) {
+        char buff[1000];
         int readStatus = read(accepting, buff, sizeof(buff));
-        printf("Read status %d \n Buffer : %s \n", readStatus, buff);
-        // Creating a blank email
-        Email email;
-        email.dataMode = false;
+        printf("Buffer : %s \n",  buff);
         // Handling non normal commands
         char firstFour[4]; // Each non normal command is 4 characters long so we're going to get the first four
         strncpy(firstFour, buff, sizeof(firstFour)); // Creating a sub string
@@ -51,7 +56,7 @@ void smtpServer() {
         if (strstr(firstFour, "QUIT") != NULL) {
             close(accepting);
             printf("Email from : %s \n Email to : %s \n Email data : %s \n Email fromip : %s \n Email dataMode : %d", email.from, email.to, email.data, email.fromip, email.dataMode); 
-            return;
+            break;
         }
         // Spliting into command and args
         char splitter[] = ":";
@@ -61,7 +66,6 @@ void smtpServer() {
         if (strstr(command, "MAIL FROM") != NULL)
             mailFromCommand(accepting, &email, args);
     }
-
 }
 
 void helloCommand(int file) {
