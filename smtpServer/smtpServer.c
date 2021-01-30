@@ -11,7 +11,7 @@ void smtpServer() {
     info.ai_socktype = SOCK_STREAM;
     info.ai_flags = AI_PASSIVE;
     // Setting port
-    getaddrinfo(NULL, "1111", &info, &res); // Port 25 is reserved unless sudo
+    getaddrinfo(NULL, "2525", &info, &res); // Port 25 is reserved unless sudo
     // Creating the socket file
     int sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);    
     // Checking for error
