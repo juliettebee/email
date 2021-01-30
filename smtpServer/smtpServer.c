@@ -51,7 +51,9 @@ void handleRequest(int accepting) {
     write(accepting, first, sizeof(first)); 
     // Creating a blank file thats going to hold data
     time_t now = time(0);
-    FILE *dataFile = fopen("email.txt", "w+");
+    char fileName[200];
+    snprintf(fileName, sizeof fileName, "email%ld.txt", now);
+    FILE *dataFile = fopen(fileName, "w+");
     // Reading connection
     while(1) {
         char buff[1000];
