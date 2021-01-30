@@ -11,9 +11,4 @@ clean:
 	rm email
 
 memcheck: compile
-	valgrind --leak-check=full \
-         --show-leak-kinds=all \
-         --track-origins=yes \
-         --verbose \
-         --log-file=valgrind-out.txt \
-		 ./email
+	valgrind --leak-check=full -v --log-file=valgrind-out.txt ./email
