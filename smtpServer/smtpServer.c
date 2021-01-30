@@ -36,6 +36,23 @@ void smtpServer() {
         // Creating a blank email
         Email email;
         email.dataMode = false;
+        // Handling non normal commands
+        char firstFour[4]; // Each non normal command is 4 characters long so we're going to get the first four
+        strncpy(firstFour, buff, sizeof(firstFour)); // Creating a sub string
+        // Now checking
+        if (strstr(firstFour, "EHLO") != NULL || strstr(firstFour, "HELO") != NULL) {
+            helloCommand(accepting);
+            continue;
+        }
+        if (strstr(firstFour, "DATA") != NULL) {
+            dataCommand(accepting, &email);
+            continue;
+        }
+        if (strstr(firstFour, "QUIT") != NULL) {
+            close(accepting);
+            printf("Email from : %s \n Email to : %s \n Email data : %s \n Email fromip : %s \n Email dataMode : %d", email.from, email.to, email.data, email.fromip, email.dataMode); 
+            return;
+        }
         // Spliting into command and args
         char splitter[] = ":";
         char *command = strtok(buff, splitter);
@@ -44,10 +61,12 @@ void smtpServer() {
         if (strstr(command, "MAIL FROM") != NULL)
             mailFromCommand(accepting, &email, args);
     }
+
 }
 
 void helloCommand(int file) {
-    char *message = "220 Hello, Im juliette\n";
+    char message[23] = "220 Hello, Im juliette\n";
+    printf("Message %s \n Size: %lu \n", message, sizeof(message));
     write(file, message, sizeof(message));
 }
 
