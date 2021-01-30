@@ -1,36 +1,46 @@
 #include "../Main.h"
+
 void smtpServer() {
-    // Creating file endpoint
-    int socketStatus = socket(AF_INET, SOCK_STREAM, 0);
-    if (socketStatus == -1) {
-        printf("Error!");
+    // We need this for accepting 
+    struct sockaddr_storage clientAddr;
+    socklen_t addr_size;
+    // Creating a struct that contains info 
+    struct addrinfo info, *res;
+    memset(&info, 0, sizeof info); // TODO: free info
+    info.ai_family = AF_UNSPEC;
+    info.ai_socktype = SOCK_STREAM;
+    info.ai_flags = AI_PASSIVE;
+    // Setting port
+    getaddrinfo(NULL, "1111", &info, &res); // Port 25 is reserved unless sudo
+    // Creating the socket file
+    int sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);    
+    // Checking for error
+    if (sock == -1) {
+        perror("Unable to create socket, ");
         return;
     }
-    // Binding
-    struct sockaddr_in addr, clientAddr;
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(25);
-    int bindStatus = bind(socketStatus, (struct sockaddr *) &addr, sizeof(addr));
-    if (bindStatus == -1) {
-        perror("bind failed. Error");
+    // Now lets bind it 
+    int binder = bind(sock, res->ai_addr, res->ai_addrlen); 
+    if (binder == -1) {
+        perror("Unable to bind, ");
         return;
     }
-    // Starting to listen
-    int listenStatus = listen(socketStatus, 5);
-    if (listenStatus == -1) {
-        perror("listen failed. Error");
-        return;
-    }
-    // Now lets start accepting!
+    // Listening for remote connections
+    int listener = listen(sock, 5);
+    if (listener == -1) {
+       perror("Unable to listen, ");
+       return;
+    } 
+    // Now lets accept them
     while (1) {
-        int clientAddrLen = sizeof(clientAddr);
-        int accepting = accept(socketStatus, (struct sockaddr *) &addr, &clientAddrLen);
-        if (accepting == -1) {
-            printf("Error! Unable to accept");
+        int acceptStatus = accept(sock, (struct sockaddr *)&clientAddr, &addr_size);
+        if (acceptStatus == -1) {
+            perror("Unable to accept, ");
             continue;
-        } else
-            handleRequest(accepting);
+        }
+        handleRequest(acceptStatus);
     }
+    freeaddrinfo(res);
 }
 
 void handleRequest(int accepting) {
