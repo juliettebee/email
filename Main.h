@@ -6,6 +6,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include <time.h>
+#include <netdb.h>
+#include <stdlib.h>
 
 typedef struct email {
     char *from;
