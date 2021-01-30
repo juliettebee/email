@@ -12,13 +12,13 @@ void smtpServer() {
     addr.sin_port = htons(25);
     int bindStatus = bind(socketStatus, (struct sockaddr *) &addr, sizeof(addr));
     if (bindStatus == -1) {
-        printf("Error! Unable to bind");
+        perror("bind failed. Error");
         return;
     }
     // Starting to listen
     int listenStatus = listen(socketStatus, 5);
     if (listenStatus == -1) {
-        printf("Error! Unable to listen");
+        perror("listen failed. Error");
         return;
     }
     // Now lets start accepting!
