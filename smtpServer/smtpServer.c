@@ -36,13 +36,29 @@ void smtpServer() {
 void handleRequest(int accepting) {
     // Creating a blank email
     Email email = {"unknown", "unknown", "unknown", false};
+    email.dataMode = false;
     char first[33] = "220 ESMTP Juliette's SMTP server\n";
     write(accepting, first, sizeof(first)); 
+    // Creating a blank file thats going to hold data
+    time_t now = time(0);
+    FILE *dataFile = fopen("email.txt", "w+");
     // Reading connection
     while(1) {
         char buff[1000];
         int readStatus = read(accepting, buff, sizeof(buff));
-        printf("Buffer : %s \n",  buff);
+        // Checking if its in data mode
+        if (email.dataMode) {
+            printf("Data mode\n");
+            // Terrible idea:
+            // instead of writing data to email objc,
+            // lets write it directly to file!
+            fprintf(dataFile, "%s", buff);
+            if (strstr(buff, ".\r\n") != NULL) {
+                email.dataMode = false;            
+                char message[7] = "250 Ok\n";
+                write(accepting, message, sizeof(message));
+            }
+        }
         // Handling non normal commands
         char firstFour[4]; // Each non normal command is 4 characters long so we're going to get the first four
         strncpy(firstFour, buff, sizeof(firstFour)); // Creating a sub string
@@ -57,7 +73,7 @@ void handleRequest(int accepting) {
         }
         if (strstr(firstFour, "QUIT") != NULL) {
             close(accepting);
-            printf("Email from : %s \n Email to : %s \n Email data : %s \n Email fromip : %s \n Email dataMode : %d", email.from, email.to, email.data, email.fromip, email.dataMode); 
+            fclose(dataFile);
             break;
         }
         // Spliting into command and args

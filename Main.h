@@ -5,10 +5,10 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
 
 typedef struct email {
     char *from;
-    char *data;
     char *fromip;
     bool dataMode;
     char to[1000];
