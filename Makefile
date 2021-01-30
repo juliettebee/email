@@ -1,5 +1,5 @@
 cc=gcc
-files=main.c smtpServer/smtpServer.c
+files=Main.c smtpServer/smtpServer.c
 
 all: compile
 	./email
