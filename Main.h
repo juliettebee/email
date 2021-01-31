@@ -12,7 +12,7 @@
 typedef struct email {
     char *from;
     char *fromip;
-    char *to;
+    char to[1000];
     bool dataMode;
 } Email;
 

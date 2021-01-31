@@ -50,12 +50,11 @@ void handleRequest(int accepting) {
     email.dataMode = false;
     email.from = "";
     email.fromip = "";
-    email.to = "";
     char first[33] = "220 ESMTP Juliette's SMTP server\n";
     write(accepting, first, sizeof(first)); 
     // Creating a blank file thats going to hold data
     time_t now = time(0);
-    char fileName[200];
+    char fileName[40];
     snprintf(fileName, sizeof fileName, "email%ld.txt", now);
     FILE *dataFile = fopen(fileName, "w+");
     if (dataFile == NULL) {
@@ -115,7 +114,6 @@ void handleRequest(int accepting) {
 
 void helloCommand(int file) {
     char message[23] = "220 Hello, Im juliette\n";
-    printf("Message %s \n Size: %lu \n", message, sizeof(message));
     write(file, message, sizeof(message));
 }
 
