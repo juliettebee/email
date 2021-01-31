@@ -33,6 +33,7 @@ void smtpServer() {
     } 
     // Now lets accept them
     while (1) {
+        addr_size = sizeof clientAddr;
         int acceptStatus = accept(sock, (struct sockaddr *)&clientAddr, &addr_size);
         if (acceptStatus == -1) {
             perror("Unable to accept, ");
@@ -45,8 +46,11 @@ void smtpServer() {
 
 void handleRequest(int accepting) {
     // Creating a blank email
-    Email email = {"unknown", "unknown", "unknown", false};
+    Email email;
     email.dataMode = false;
+    email.from = "";
+    email.fromip = "";
+    email.to = "";
     char first[33] = "220 ESMTP Juliette's SMTP server\n";
     write(accepting, first, sizeof(first)); 
     // Creating a blank file thats going to hold data
@@ -54,9 +58,14 @@ void handleRequest(int accepting) {
     char fileName[200];
     snprintf(fileName, sizeof fileName, "email%ld.txt", now);
     FILE *dataFile = fopen(fileName, "w+");
+    if (dataFile == NULL) {
+        perror("Unable to create file, ");
+        exit(0);
+    }
     // Reading connection
     while(1) {
-        char buff[1000];
+        char buff[1000] = "";
+        printf("buff %s", buff);
         int readStatus = read(accepting, buff, sizeof(buff));
         // Checking if its in data mode
         if (email.dataMode) {
@@ -72,7 +81,7 @@ void handleRequest(int accepting) {
             }
         }
         // Handling non normal commands
-        char firstFour[4]; // Each non normal command is 4 characters long so we're going to get the first four
+        char firstFour[4] = ""; // Each non normal command is 4 characters long so we're going to get the first four
         strncpy(firstFour, buff, sizeof(firstFour)); // Creating a sub string
         // Now checking
         if (strstr(firstFour, "EHLO") != NULL || strstr(firstFour, "HELO") != NULL) {
@@ -92,6 +101,10 @@ void handleRequest(int accepting) {
         char splitter[] = ":";
         char *command = strtok(buff, splitter);
         char *args = strtok(NULL, splitter);
+        if (args == NULL) // strtok can return null so we need dto check if its null and if it is set it to a blank string
+            args = "";
+        if (command == NULL)
+            command = "";
         // Now lets handle normal commands
         if (strstr(command, "MAIL FROM") != NULL)
             mailFromCommand(accepting, &email, args);
@@ -119,7 +132,7 @@ void mailFromCommand(int file, Email *email, char *args) {
 }
 
 void rcptToCommand(int file, Email *email, char *args) {
-    strcat(email->to, args);
+    snprintf(email->to, sizeof email->to, "%s%s", email->to, args);
     char message[7] = "250 Ok\n";
     write(file, message, sizeof(message));
 

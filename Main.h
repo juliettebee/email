@@ -12,8 +12,8 @@
 typedef struct email {
     char *from;
     char *fromip;
+    char *to;
     bool dataMode;
-    char to[1000];
 } Email;
 
 void smtpServer();
