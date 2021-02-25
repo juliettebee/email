@@ -31,6 +31,11 @@ void smtpServer() {
        perror("Unable to listen, ");
        return;
     } 
+    // Setting maxium amount of threads to use
+    // TODO: generate number dynamically
+    pthread_t threads[3];
+    int thread = 0;
+    int ress;
     // Now lets accept them
     while (1) {
         addr_size = sizeof clientAddr;
@@ -39,12 +44,19 @@ void smtpServer() {
             perror("Unable to accept, ");
             continue;
         }
-        handleRequest(acceptStatus);
+        ress = pthread_create(&threads[thread], NULL, handleRequest,(void *) acceptStatus);
+        if (ress) {
+            printf("Error:unable to create thread, %d\n", ress);
+    	    exit(-1);
+        }
     }
+    pthread_exit(NULL);
     freeaddrinfo(res);
 }
 
-void handleRequest(int accepting) {
+void handleRequest(void *threadIn) {
+    int accepting = (int)threadIn;
+    printf("Ok, we are in");
     // Creating a blank email
     Email email;
     email.dataMode = false;

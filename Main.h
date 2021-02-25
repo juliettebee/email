@@ -8,6 +8,8 @@
 #include <time.h>
 #include <netdb.h>
 #include <stdlib.h>
+#include <pthread.h>
+#include <sys/stat.h>
 
 typedef struct email {
     char *from;
@@ -18,7 +20,7 @@ typedef struct email {
 
 void smtpServer();
 void helloCommand();
-void handleRequest(int accepting);
+void handleRequest(void *threadIn);
 void dataCommand(int file, Email *email); 
 void mailFromCommand(int file, Email *email, char *args);
 void rcptToCommand(int file, Email *email, char *args);
