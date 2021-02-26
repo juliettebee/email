@@ -68,15 +68,11 @@ void handleRequest(void *threadIn) {
     time_t now = time(0);
     char fileName[40];
     snprintf(fileName, sizeof fileName, "email%ld.txt", now);
-    FILE *dataFile = fopen(fileName, "w+");
-    if (dataFile == NULL) {
-        perror("Unable to create file, ");
-        exit(0);
-    }
+    FILE *dataFile;
+
     // Reading connection
     while(1) {
         char buff[1000] = "";
-        printf("buff %s", buff);
         int readStatus = read(accepting, buff, sizeof(buff));
         // Checking if its in data mode
         if (email.dataMode) {
@@ -100,6 +96,11 @@ void handleRequest(void *threadIn) {
             continue;
         }
         if (strstr(firstFour, "DATA") != NULL) {
+            dataFile = fopen(fileName, "w+");
+            if (dataFile == NULL) {
+                perror("Unable to create file, ");
+                exit(0);
+            }
             dataCommand(accepting, &email);
             continue;
         }
