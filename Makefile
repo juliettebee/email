@@ -1,11 +1,11 @@
 cc=gcc
-files=Main.c smtpServer/smtpServer.c
+files=Main.c smtpServer/smtpServer.c popServer/popServer.c
 
 all: compile
 	./email
 
 compile:
-	$(cc) $(files) -o email 
+	$(cc) -pthread $(files) -o email 
 
 clean:
 	rm email
