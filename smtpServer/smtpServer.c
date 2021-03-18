@@ -44,7 +44,13 @@ void smtpServer() {
             perror("Unable to accept, ");
             continue;
         }
+        if ( thread >= 2) {
+            thread = 0;
+            for ( int i = 0; i < 2; i++)
+                pthread_join(threads[i++], NULL);
+        }
         ress = pthread_create(&threads[thread], NULL, handleRequest,(void *) acceptStatus);
+        thread++;
         if (ress) {
             printf("Error:unable to create thread, %d\n", ress);
     	    exit(-1);
