@@ -2,7 +2,7 @@
 
 int main( int argc, char *argv[] ) {
     if (argc != 2) {
-        printf("Please include the folder where you want emails to go!");
+        printf("Please include the folder where you want emails to go as the argument!\n");
         exit(-1);
     }
     // Creating a deamon

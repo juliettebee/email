@@ -12,6 +12,7 @@ void smtpServer() {
     info.ai_flags = AI_PASSIVE;
     // Setting port
     getaddrinfo(NULL, "2525", &info, &res); // Port 25 is reserved unless sudo
+//    getaddrinfo(NULL, "25", &info, &res);
     // Creating the socket file
     int sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);    
     // Checking for error
@@ -31,127 +32,105 @@ void smtpServer() {
        perror("Unable to listen, ");
        return;
     } 
-    // Setting maxium amount of threads to use
-    // TODO: generate number dynamically
-    pthread_t threads[3];
-    int thread = 0;
-    int ress;
-    // Now lets accept them
+
+    printf("Starting to listen\n");
     while (1) {
         addr_size = sizeof clientAddr;
         int acceptStatus = accept(sock, (struct sockaddr *)&clientAddr, &addr_size);
-        if (acceptStatus == -1) {
-            perror("Unable to accept, ");
-            continue;
-        }
-        if ( thread >= 2) {
-            thread = 0;
-            for ( int i = 0; i < 2; i++)
-                pthread_join(threads[i++], NULL);
-        }
-        ress = pthread_create(&threads[thread], NULL, handleRequest,(void *) acceptStatus);
-        thread++;
-        if (ress) {
-            printf("Error:unable to create thread, %d\n", ress);
-    	    exit(-1);
-        }
-    }
-    pthread_exit(NULL);
-    freeaddrinfo(res);
-}
+        // un need
+        struct sockaddr_in *sin = (struct sockaddr_in *)&clientAddr;
+        unsigned char *ip = (unsigned char *)&sin->sin_addr.s_addr;
 
-void handleRequest(void *threadIn) {
-    int accepting = (int)threadIn;
-    printf("Ok, we are in");
-    // Creating a blank email
-    Email email;
-    email.dataMode = false;
-    email.from = "";
-    email.fromip = "";
-    char first[33] = "220 ESMTP Juliette's SMTP server\n";
-    write(accepting, first, sizeof(first)); 
-    // Creating a blank file thats going to hold data
+        printf("%d.%d.%d.%d\n", ip[0], ip[1], ip[2], ip[3]);
+        // end un need
+        
+        if (acceptStatus == -1)
+            continue;
+
+        int pid;
+        if ((pid = fork()) == -1)
+            close(acceptStatus);
+        else if (pid > 0)
+            close(acceptStatus);
+        else if (pid == 0)
+            handleCommand(acceptStatus);
+
+   }
+} 
+
+void handleCommand (int sock) {
+    write(sock, "220 ESMTP Juliette's SMTP Server \n", strlen("220 ESMTP Juliette's SMTP Server \n"));
+
+    bool dataMode = false;
     time_t now = time(0);
     char fileName[40];
     snprintf(fileName, sizeof fileName, "email%ld.txt", now);
     FILE *dataFile;
 
-    // Reading connection
-    while(1) {
-        char buff[1000] = "";
-        int readStatus = read(accepting, buff, sizeof(buff));
-        // Checking if its in data mode
-        if (email.dataMode) {
-            printf("Data mode\n");
-            // Terrible idea:
-            // instead of writing data to email objc,
-            // lets write it directly to file!
-            fprintf(dataFile, "%s", buff);
-            if (strstr(buff, ".\r\n") != NULL) {
-                email.dataMode = false;            
-                char message[7] = "250 Ok\n";
-                write(accepting, message, sizeof(message));
+    while (1) {
+        printf("loop\n");
+        // First, we need to get input
+        char buff[1000];
+        int res = read(sock, buff, sizeof buff);
+//        printf("%s", buff);
+        // If we're in data mode we need to write instead of parse commands so that takes place first
+        if (dataMode) {
+            // So we need to conver the buffer to a char pointer as the buffer tends to have weird characters that we would rather not have in a file
+            char *diffBuff = malloc(res * sizeof(char *));
+            diffBuff = buff;
+            // Writing
+            fprintf(dataFile, "%s", diffBuff);
+            if (strstr(diffBuff, ".\r\n") != NULL) {
+                dataMode = false;
+                char msg[7] = "250 Ok\n";
+                write(sock, msg, sizeof msg);
+                continue;
             }
-        }
-        // Handling non normal commands
-        char firstFour[4] = ""; // Each non normal command is 4 characters long so we're going to get the first four
-        strncpy(firstFour, buff, sizeof(firstFour)); // Creating a sub string
-        // Now checking
-        if (strstr(firstFour, "EHLO") != NULL || strstr(firstFour, "HELO") != NULL) {
-            helloCommand(accepting);
             continue;
         }
+        // Now we need to parse the command
+        // Getting first four characters
+        char firstFour[4] = "";
+        strncpy(firstFour, buff, sizeof firstFour);
+        // Getting command if its in YAML like form
+        char splitter[] = ":";
+        char *command = strtok(buff, splitter);
+        // Now checking for command
         if (strstr(firstFour, "DATA") != NULL) {
+            char msg[36] = "354 End data with <CR><LF>.<CR><LF>\n";
+            write(sock, msg, sizeof msg);
+            dataMode = true;
             dataFile = fopen(fileName, "w+");
             if (dataFile == NULL) {
                 perror("Unable to create file, ");
                 exit(0);
             }
-            dataCommand(accepting, &email);
-            continue;
-        }
-        if (strstr(firstFour, "QUIT") != NULL) {
-            close(accepting);
+            printf("== SENT COMMAND DATA ==\n");
+        } else if (strstr(firstFour, "EHLO") != NULL || strstr(firstFour, "HELO") != NULL) {
+            char msg[10] = "250 Hello\n";
+            write(sock, msg, sizeof msg);
+            printf("== SENT COMMAND HELLO ==\n");
+        } else if (strstr(firstFour, "QUIT") != NULL) {
+            printf("== SENT COMMAND QUIT ==\n");
+            printf("closing socket\n");
+            close(sock);
+            printf("Closed socket\n");
             fclose(dataFile);
-            break;
+            printf("Closed data file\n");
+            return;
+            printf("This should not run\n");
+        } else if (strstr(command, "MAIL FROM") != NULL) {
+            char msg[7] = "250 OK\n";
+            write(sock, msg, sizeof msg);
+            printf("== SENT COMMAND FROM ==\n");
+        } else if (strstr(command, "RCPT TO") != NULL) {
+            char msg[7] = "250 Ok\n";
+            write(sock, msg, sizeof msg);
+            printf("== SENT COMMAND TO ==\n");
+        } else {
+            char msg[22] = "500 I don't know that\n";
+            write(sock, msg, sizeof msg);
+            printf("== SENT COMMAND NOT KNOWN ==\n");
         }
-        // Spliting into command and args
-        char splitter[] = ":";
-        char *command = strtok(buff, splitter);
-        char *args = strtok(NULL, splitter);
-        if (args == NULL) // strtok can return null so we need dto check if its null and if it is set it to a blank string
-            args = "";
-        if (command == NULL)
-            command = "";
-        // Now lets handle normal commands
-        if (strstr(command, "MAIL FROM") != NULL)
-            mailFromCommand(accepting, &email, args);
-        else if (strstr(command, "RCPT TO") != NULL)
-            rcptToCommand(accepting, &email, args);
     }
 }
-
-void helloCommand(int file) {
-    char message[23] = "220 Hello, Im juliette\n";
-    write(file, message, sizeof(message));
-}
-
-void dataCommand(int file, Email *email) {
-    email->dataMode = true;
-    char message[36] = "354 End data with <CR><LF>.<CR><LF>\n";
-    write(file, message, sizeof(message));
-}
-
-void mailFromCommand(int file, Email *email, char *args) {
-    email->from = args;
-    char message[7] = "250 Ok\n";
-    write(file, message, sizeof(message));
-}
-
-void rcptToCommand(int file, Email *email, char *args) {
-    snprintf(email->to, sizeof email->to, "%s%s", email->to, args);
-    char message[7] = "250 Ok\n";
-    write(file, message, sizeof(message));
-
-}
-
