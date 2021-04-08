@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/DusanKasan/parsemail"
+	"github.com/google/uuid"
 	"github.com/pollen5/discord-oauth2"
 	"golang.org/x/oauth2"
 	"html/template"
-    "github.com/google/uuid"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -18,7 +18,7 @@ type EmailReturn struct {
 	Index   int
 	Sender  string
 	Subject string
-    Body string
+	Body    string
 }
 
 type PageData struct {
@@ -26,8 +26,8 @@ type PageData struct {
 	To      string
 	From    string
 	Body    string
-    Html bool
-    Id int
+	Html    bool
+	Id      int
 }
 
 type EmailListData struct {
@@ -42,24 +42,24 @@ type DiscordResponse struct {
 }
 
 // Todo: generate this randomly
-var state = uuid.New().String() 
-var authorized = uuid.New().String() 
+var state = uuid.New().String()
+var authorized = uuid.New().String()
 
 // todo: fix this mess
 func CheckAuth(r *http.Request) bool {
-        // Check for auth cookie
-        cookie, err := r.Cookie("auth")
-        
-        if err != nil {
-            return false
-        }
+	// Check for auth cookie
+	cookie, err := r.Cookie("auth")
 
-        value := cookie.Value
+	if err != nil {
+		return false
+	}
 
-        if value == authorized {
-            return true
-        } 
-        return false
+	value := cookie.Value
+
+	if value == authorized {
+		return true
+	}
+	return false
 }
 
 func main() {
@@ -81,8 +81,8 @@ func main() {
 	// Now that we have the files we neeed to parse
 	emails := []parsemail.Email{}
 	emailReturn := []EmailReturn{}
-    fileNames := []string{}
-    i := 0
+	fileNames := []string{}
+	i := 0
 	for _, file := range files {
 		reader, err := os.Open(file)
 
@@ -94,7 +94,7 @@ func main() {
 		email, err := parsemail.Parse(reader)
 
 		if err != nil {
-            fmt.Println(err)
+			fmt.Println(err)
 			fmt.Println("Unable to parse email")
 			continue
 		}
@@ -103,13 +103,13 @@ func main() {
 			Index:   i,
 			Sender:  email.From[0].Address,
 			Subject: email.Subject,
-            Body: email.TextBody,
+			Body:    email.TextBody,
 		}
 
 		emails = append(emails, email)
 		emailReturn = append(emailReturn, ret)
-        fileNames = append(fileNames, file)
-        i++
+		fileNames = append(fileNames, file)
+		i++
 	}
 	// Now that we have that we can make the template
 	emailTemplate := template.Must(template.ParseFiles("public/email.html"))
@@ -123,14 +123,14 @@ func main() {
 		Endpoint:     discord.Endpoint,
 	}
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        // Check for auth cookie
-        log := CheckAuth(r)
-        if log {
-            http.Redirect(w, r, "/emails", http.StatusTemporaryRedirect)
-            return
-        }
-            // Redirect to signin
-		    http.Redirect(w, r, conf.AuthCodeURL(state), http.StatusTemporaryRedirect)
+		// Check for auth cookie
+		log := CheckAuth(r)
+		if log {
+			http.Redirect(w, r, "/emails", http.StatusTemporaryRedirect)
+			return
+		}
+		// Redirect to signin
+		http.Redirect(w, r, conf.AuthCodeURL(state), http.StatusTemporaryRedirect)
 	})
 	// Handle callback
 	http.HandleFunc("/auth/callback", func(w http.ResponseWriter, r *http.Request) {
@@ -158,38 +158,38 @@ func main() {
 		}
 
 		if allowed == data.Id {
-            cookie := http.Cookie{
-                Name: "auth",
-                Value: authorized,
-                MaxAge: 86400,
-                HttpOnly: false,
-                Path: "/",
-            }
-            http.SetCookie(w, &cookie)
-            // We cant redirect because of a safari bug so we need to send user to another page
-            fmt.Fprintf(w, "<a href=\"/emails\">Emails</a>")
+			cookie := http.Cookie{
+				Name:     "auth",
+				Value:    authorized,
+				MaxAge:   86400,
+				HttpOnly: false,
+				Path:     "/",
+			}
+			http.SetCookie(w, &cookie)
+			// We cant redirect because of a safari bug so we need to send user to another page
+			fmt.Fprintf(w, "<a href=\"/emails\">Emails</a>")
 		} else {
 			fmt.Fprint(w, "Bye!")
 		}
 	})
 	// Listening
 	http.HandleFunc("/emails", func(w http.ResponseWriter, r *http.Request) {
-        isAuth := CheckAuth(r)
-        if isAuth == false {
-            http.Redirect(w, r, conf.AuthCodeURL(state), http.StatusTemporaryRedirect)
-            return
-        }
+		isAuth := CheckAuth(r)
+		if isAuth == false {
+			http.Redirect(w, r, conf.AuthCodeURL(state), http.StatusTemporaryRedirect)
+			return
+		}
 		data := EmailListData{
 			Emails: emailReturn,
 		}
 		emailsTemplate.Execute(w, data)
 	})
 	http.HandleFunc("/email", func(w http.ResponseWriter, r *http.Request) {
-        isAuth := CheckAuth(r)
-        if isAuth == false {
-            http.Redirect(w, r, conf.AuthCodeURL(state), http.StatusTemporaryRedirect)
-            return
-        }
+		isAuth := CheckAuth(r)
+		if isAuth == false {
+			http.Redirect(w, r, conf.AuthCodeURL(state), http.StatusTemporaryRedirect)
+			return
+		}
 		// Getting email id
 		id := r.URL.Query().Get("id")
 		if id == "" {
@@ -204,74 +204,74 @@ func main() {
 		}
 		// Getting the email
 		email := emails[idInt]
-        body := email.TextBody 
-        ishtml := false
-        if email.HTMLBody != "" {
-            body = email.HTMLBody
-            ishtml = true
-        }
+		body := email.TextBody
+		ishtml := false
+		if email.HTMLBody != "" {
+			body = email.HTMLBody
+			ishtml = true
+		}
 		// Now running the template
 		data := PageData{
 			Subject: email.Subject,
 			To:      email.To[0].Address,
 			From:    email.From[0].Address,
 			Body:    body,
-            Html: ishtml,
-            Id: idInt,
+			Html:    ishtml,
+			Id:      idInt,
 		}
 		emailTemplate.Execute(w, data)
 	})
 
-    http.HandleFunc("/api/raw", func(w http.ResponseWriter, r *http.Request) {
-        isAuth := CheckAuth(r)
-        if isAuth == false {
-            http.Redirect(w, r, conf.AuthCodeURL(state), http.StatusTemporaryRedirect)
-            return
-        }
-        // Getting email id
+	http.HandleFunc("/api/raw", func(w http.ResponseWriter, r *http.Request) {
+		isAuth := CheckAuth(r)
+		if isAuth == false {
+			http.Redirect(w, r, conf.AuthCodeURL(state), http.StatusTemporaryRedirect)
+			return
+		}
+		// Getting email id
 		id := r.URL.Query().Get("id")
 		if id == "" {
 			fmt.Fprintf(w, "You need an id!")
 			return
 		}
-        // Converting to int
+		// Converting to int
 		idInt, err := strconv.Atoi(id)
 		if err != nil {
 			fmt.Fprintf(w, "Unable to convert int!")
 			return
 		}
-        
-        email := emails[idInt]
-        if email.HTMLBody != "" {
-            fmt.Fprintf(w, email.HTMLBody)
-        } else {
-            fmt.Fprintf(w, "Not html!")
-        }
-    })
-    http.HandleFunc("/api/delete", func(w http.ResponseWriter, r *http.Request) {
-        isAuth := CheckAuth(r)
-        if isAuth == false {
-            http.Redirect(w, r, conf.AuthCodeURL(state), http.StatusTemporaryRedirect)
-            return
-        }
-        // Getting email id
-		id := r.URL.Query().Get("id")
-		if id == "" {
-			fmt.Fprintf(w, "You need an id!")
-			return
-		}
-        // Converting to int
-		idInt, err := strconv.Atoi(id)
-		if err != nil {
-			fmt.Fprintf(w, "Unable to convert int!")
-			return
-		}
-        emails = append(emails[idInt:], emails[idInt+1:]...)
-        emailReturn = append(emailReturn[idInt:], emailReturn[idInt+1:]...)
-        os.Remove(fileNames[idInt])
-        fileNames = append(fileNames[idInt:], fileNames[idInt+1:]...)
 
-    })
+		email := emails[idInt]
+		if email.HTMLBody != "" {
+			fmt.Fprintf(w, email.HTMLBody)
+		} else {
+			fmt.Fprintf(w, "Not html!")
+		}
+	})
+	http.HandleFunc("/api/delete", func(w http.ResponseWriter, r *http.Request) {
+		isAuth := CheckAuth(r)
+		if isAuth == false {
+			http.Redirect(w, r, conf.AuthCodeURL(state), http.StatusTemporaryRedirect)
+			return
+		}
+		// Getting email id
+		id := r.URL.Query().Get("id")
+		if id == "" {
+			fmt.Fprintf(w, "You need an id!")
+			return
+		}
+		// Converting to int
+		idInt, err := strconv.Atoi(id)
+		if err != nil {
+			fmt.Fprintf(w, "Unable to convert int!")
+			return
+		}
+		emails = append(emails[idInt:], emails[idInt+1:]...)
+		emailReturn = append(emailReturn[idInt:], emailReturn[idInt+1:]...)
+		os.Remove(fileNames[idInt])
+		fileNames = append(fileNames[idInt:], fileNames[idInt+1:]...)
+
+	})
 	http.ListenAndServe(":80", nil)
 
 }
