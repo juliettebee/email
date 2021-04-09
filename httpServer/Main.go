@@ -62,16 +62,7 @@ func CheckAuth(r *http.Request) bool {
 	return false
 }
 
-func main() {
-	if len(os.Args) < 5 {
-		fmt.Printf("%s [path to email server] [discord client id] [discord client secret] [allowed discord user id]", os.Args[0])
-		os.Exit(0)
-	}
-	// Setting the args
-	folder := os.Args[1]
-	clientId := os.Args[2]
-	clientSecret := os.Args[3]
-	allowed := os.Args[4]
+func getFiles(folder string) ([]parsemail.Email, []EmailReturn, []string) {
 	// Next, getting all the files in it and parsing
 	files := []string{}
 	filepath.Walk(folder, func(path string, f os.FileInfo, err error) error {
@@ -111,6 +102,20 @@ func main() {
 		fileNames = append(fileNames, file)
 		i++
 	}
+	return emails, emailReturn, fileNames
+}
+
+func main() {
+	if len(os.Args) < 5 {
+		fmt.Printf("%s [path to email server] [discord client id] [discord client secret] [allowed discord user id]", os.Args[0])
+		os.Exit(0)
+	}
+	// Setting the args
+	folder := os.Args[1]
+	clientId := os.Args[2]
+	clientSecret := os.Args[3]
+	allowed := os.Args[4]
+	emails, emailReturn, fileNames := getFiles(folder)
 	// Now that we have that we can make the template
 	emailTemplate := template.Must(template.ParseFiles("public/email.html"))
 	emailsTemplate := template.Must(template.ParseFiles("public/emails.html"))
@@ -179,6 +184,9 @@ func main() {
 			http.Redirect(w, r, conf.AuthCodeURL(state), http.StatusTemporaryRedirect)
 			return
 		}
+		// Refreshing email list
+		emails, emailReturn, fileNames = getFiles(folder)
+
 		data := EmailListData{
 			Emails: emailReturn,
 		}
