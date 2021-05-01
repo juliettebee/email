@@ -1,32 +1,20 @@
 #include "Main.h"
 
-int main( int argc, char *argv[] ) {
-    if (argc != 2) {
-        printf("Please include the folder where you want emails to go as the argument!\n");
-        exit(-1);
+int main (int argc, char *argv[]) {
+    // Getting config
+    if (argc < 2) {
+        printf("✉️  Juliette's SMTP server\n./email [Domain]\n");
+        return 0;
     }
-    // Creating a deamon
-    pid_t process_id = 0;
-    pid_t sid = 0;
-    // Create child process
-    process_id = fork();
-    // Checking for error
-    if (process_id < 0) {
-        printf("Error in forking!");
-        exit(-1);
+
+    if (strlen(argv[1]) > 64) {
+        printf("The domain cannot be above 64 characters!\n");
+        return 0;
     }
-    if (process_id > 0) {
-        printf("Bye!");
-        exit(0);
-    }
-    umask(0);
-    sid = setsid();
-    if(sid < 0)
-        exit(-1);
-    chdir(argv[1]);
-    close(STDIN_FILENO);
-    close(STDOUT_FILENO);
-    close(STDERR_FILENO);
-    smtpServer();
-    return 0;
+
+    ServerConfig config;
+    strcpy(config.domain, argv[1]);
+    printf("%s", config.domain);
+    // todo: daemon this
+    smtpServer(config);
 }

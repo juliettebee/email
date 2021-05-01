@@ -280,6 +280,19 @@ func main() {
 		fileNames = append(fileNames[idInt:], fileNames[idInt+1:]...)
 
 	})
+
+    http.HandleFunc("/api/emails", func(w http.ResponseWriter, r *http.Request) {
+		isAuth := CheckAuth(r)
+		if isAuth == false {
+			http.Redirect(w, r, conf.AuthCodeURL(state), http.StatusTemporaryRedirect)
+			return
+		}	isAuth := CheckAuth(r)
+		if isAuth == false {
+			http.Redirect(w, r, conf.AuthCodeURL(state), http.StatusTemporaryRedirect)
+			return
+		}
+    })
+
 	http.ListenAndServe(":80", nil)
 
 }
