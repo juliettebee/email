@@ -3,5 +3,5 @@ cflags=-o email
 
 all: compile
 
-compile: Main.c
+compile: Main.c smtpServer/smtpServer.c
 	$(cc) $(cflags) $?

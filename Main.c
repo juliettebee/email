@@ -3,7 +3,7 @@
 int main (int argc, char *argv[]) {
     // Getting config
     if (argc < 2) {
-        printf("✉️  Juliette's SMTP server\n./email [Domain]\n");
+        printf("✉️  Juliette's SMTP server\n./email [Domain] [Discord style webhook url (Optional)]\n");
         return 0;
     }
 
@@ -12,9 +12,9 @@ int main (int argc, char *argv[]) {
         return 0;
     }
 
-    ServerConfig config;
+    ServerConfig config = {0};
     strcpy(config.domain, argv[1]);
-    printf("%s", config.domain);
+    
     // todo: daemon this
     smtpServer(config);
 }
