@@ -1,16 +1,10 @@
-cc=gcc
-files=Main.c smtpServer/smtpServer.c 
+cc=clang
+cflags=-o email
 
 all: compile
 
-compile:
-	$(cc) $(files) -o email 
-
-clean:
-	rm email
-
-memcheck: compile
-	valgrind --leak-check=full -v --log-file=valgrind-out.txt ./email
+compile: Main.c smtpServer/smtpServer.c
+	$(cc) $(cflags) $?
 
 deploy: compile
 	iptables -P INPUT ACCEPT
