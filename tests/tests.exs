@@ -1,3 +1,4 @@
+Code.require_file "tests/helper.exs"
 ExUnit.start
 
 defmodule ConnectionTests do
@@ -15,20 +16,22 @@ defmodule CommandTests do
   use ExUnit.Case, async: true
 
   test "Invalid command" do
-    {:ok, socket} = :gen_tcp.connect('localhost', 2525, [:binary, active: false])
-    {:ok, _} = :gen_tcp.recv(socket, 0)
-    :gen_tcp.send(socket, "BAD COMMAND: BAD")
-    {:ok, message} = :gen_tcp.recv(socket, 0)   
-    :gen_tcp.send(socket, "QUIT") 
+    message = Helper.connect_and_send "BAD COMMAND: BAD"
     assert message == "500 I don't know that\n"
   end
 
   test "HELO" do
-    {:ok, socket} = :gen_tcp.connect('localhost', 2525, [:binary, active: false])
-    {:ok, _} = :gen_tcp.recv(socket, 0)
-    :gen_tcp.send(socket, "HELO")
-    {:ok, message} = :gen_tcp.recv(socket, 0)
-    :gen_tcp.send(socket, "QUIT")
+    message = Helper.connect_and_send "HELO"
     assert message == "250 Hello\n"
+  end
+
+  test "MAIL FROM" do
+    message = Helper.connect_and_send "MAIL FROM: <test@test.test>"
+    assert message == "250 Ok\n"
+  end
+
+  test "RCPT TO" do
+    message = Helper.connect_and_send "RCPT TO: <tester@test.test>"
+    assert message == "250 Ok\n"
   end
 end

@@ -22,6 +22,10 @@ func handleConnection (connection: JSocket, folder: URL) {
         switch command {
         case "HELO":
             "250 Hello\n".write(connection)
+        case "MAIL FROM":
+            "250 Ok\n".write(connection)
+        case "RCPT TO":
+            "250 Ok\n".write(connection)
         case "QUIT":
             connection.close()
             return
