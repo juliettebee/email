@@ -47,5 +47,4 @@ Temporary Items
 *.o
 valgrind-out.txt 
 *.dSYM
-email
-httpServer/emailTests
+.build
