@@ -49,3 +49,4 @@ valgrind-out.txt
 *.dSYM
 .build
 .swiftpm
+.elxir_ls

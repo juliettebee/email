@@ -11,4 +11,8 @@ deploy: compile
 	iptables-save
 
 test:
+	mkdir -p tests/emails
+	#swift run Email $(pwd)/tests/emails &
+	#sleep 4
 	elixir tests/tests.exs
+	rm -rf tests/emails
