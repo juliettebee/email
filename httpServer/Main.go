@@ -121,9 +121,9 @@ func main() {
 	emailTemplate := template.Must(template.ParseFiles("public/email.html"))
 	emailsTemplate := template.Must(template.ParseFiles("public/emails.html"))
 	// Setting up oauth
-    redirectURL := fmt.Sprintf("http://%s/auth/callback", redirectIP)
+    redirectURL := fmt.Sprintf("http://%s/auth/callback", deviceIP)
 	conf := &oauth2.Config{
-		RedirectURL:  deviceIP,
+		RedirectURL:  redirectURL,
 		ClientID:     clientId,
 		ClientSecret: clientSecret,
 		Scopes:       []string{discord.ScopeIdentify},
@@ -285,10 +285,6 @@ func main() {
 
     http.HandleFunc("/api/emails", func(w http.ResponseWriter, r *http.Request) {
 		isAuth := CheckAuth(r)
-		if isAuth == false {
-			http.Redirect(w, r, conf.AuthCodeURL(state), http.StatusTemporaryRedirect)
-			return
-		}	isAuth := CheckAuth(r)
 		if isAuth == false {
 			http.Redirect(w, r, conf.AuthCodeURL(state), http.StatusTemporaryRedirect)
 			return

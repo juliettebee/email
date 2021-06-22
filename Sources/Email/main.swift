@@ -8,26 +8,36 @@ if arguments.count < 2 {
 
 let folder = URL(string: CommandLine.arguments[1])!
 
-let socketFd = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP)
+let socketFd = socket(2, 1, 6)
 
 if socketFd == -1 {
-    print("Error creating socket")
+    print("Error creating socket, \(errno)")
     exit(EXIT_FAILURE)
 }
 
-var hints = addrinfo(ai_flags: AI_PASSIVE, ai_family: AF_UNSPEC, ai_socktype: SOCK_STREAM, ai_protocol: 0, ai_addrlen: 0, ai_canonname: nil, ai_addr: nil, ai_next: nil)
-var servinfo: UnsafeMutablePointer<addrinfo>? = nil
-let addrInfo = getaddrinfo(nil, "2525", &hints, &servinfo)
+#if os(Linux)
+var hints = addrinfo(ai_flags: AI_PASSIVE, ai_family: AF_INET, ai_socktype: Int32(1), ai_protocol: 0, ai_addrlen: 0, ai_addr: nil, ai_canonname: nil, ai_next: nil)
+#elseif os(macOS)
+var hints = addrinfo(ai_flags: AI_PASSIVE, ai_family: AF_INET, ai_socktype: SOCK_STREAM, ai_protocol: 0, ai_addrlen: 0, ai_canonname: nil, ai_addr: nil, ai_next: nil)
+#endif
 
-if addrInfo != 0 {
-    print("Error, \(errno)")
-    exit(EXIT_FAILURE)
+var res: UnsafeMutablePointer<addrinfo>? = nil
+let addrInfoResult = getaddrinfo(nil, "2525", &hints, &res)
+
+if addrInfoResult != 0 {
+print("Error getting address info: \(errno)")
+exit(EXIT_FAILURE)
 }
 
-let bindResult = bind(socketFd, servinfo!.pointee.ai_addr, socklen_t(servinfo!.pointee.ai_addrlen))
+guard let addr = res?.pointee.ai_addr, let addrLen = res?.pointee.ai_addrlen else {
+print("Unable to get socket address")
+exit(EXIT_FAILURE)
+}
 
-if bindResult == -1 {
-    print("Error, \(errno)")
+let bindResult = bind(socketFd, addr, socklen_t(addrLen))
+
+if bindResult != 0 {
+    print("Error binding, \(errno)")
     exit(EXIT_FAILURE)
 }
 
@@ -38,20 +48,21 @@ if list == -1 {
     exit(EXIT_FAILURE)
 }
 
+print("Ready!")
+
 while (true) {
     var addr = sockaddr()
     var addr_len: socklen_t = 0
-    
+
     let client = accept(socketFd, &addr, &addr_len)
-    
+
     if client == -1 {
         print("Error accepting client")
     }
-    
+
     let queue = DispatchQueue(label: "newSocket")
     queue.async {
         print("New connection")
         handleConnection(connection: JSocket(fd: client), folder: folder)
     }
 }
-
