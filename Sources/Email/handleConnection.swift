@@ -12,19 +12,28 @@ func handleConnection (connection: JSocket, folder: URL) {
     
     var dataMode = false
     
-    let dataFile = URL(fileURLWithPath: folder.absoluteString).appendingPathComponent(DateFormatter.localizedString(from: Date(), dateStyle: .long, timeStyle: .long))
+//    let dataFile = URL(fileURLWithPath: folder.absoluteString).appendingPathComponent(DateFormatter.localizedString(from: Date(), dateStyle: .long, timeStyle: .long))
+    
+    let dataFile = URL(fileURLWithPath: folder.absoluteString).appendingPathComponent(UUID().uuidString)
 
     while (true) {
         let input = connection.read()
         
         if dataMode {
             
+            var contents = ""
+
             do {
-                var contents = try String(contentsOf: dataFile, encoding: .utf8)
+                contents = try String(contentsOf: dataFile, encoding: .utf8)
                 contents = contents.appending(input)
-                try contents.write(toFile: dataFile.absoluteString, atomically: true, encoding: .utf8)
             } catch {
-                print("Error, \(error)")
+                contents = input
+            }
+
+            do {
+                try contents.write(toFile: dataFile.path, atomically: false, encoding: .utf8)
+            } catch {
+                print("Error (36), \(error)")
             }
             
             if input.contains("\r\n.") {
@@ -49,8 +58,6 @@ func handleConnection (connection: JSocket, folder: URL) {
         case "RCPT TO":
             "250 Ok\n".write(connection)
         case "DATA":
-            let result = FileManager.default.createFile(atPath: dataFile.absoluteString, contents: Data(), attributes: nil)
-            print(result)
             dataMode = true
             "354 End data with <CR><LF>.<CR><LF>\n".write(connection)
         case "QUIT":

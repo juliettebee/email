@@ -16,7 +16,7 @@ struct JSocket {
     let fd: Int32
     
     public func read () -> String {
-        var buffer = UnsafeMutableRawPointer.allocate(byteCount: 2000,alignment: MemoryLayout<CChar>.size)
+        var buffer = [UInt8](repeating: 0, count: 2000)
         
         #if os(Linux)
         let result = Glibc.read(fd, &buffer, 2000)
@@ -27,14 +27,9 @@ struct JSocket {
         if result == 0 {
             return ""
         } else if result == -1 {
-            print("Error: \(errno)")
             return ""
         } else {
-            let strResult = withUnsafePointer(to: &buffer) {
-              $0.withMemoryRebound(to: CChar.self, capacity: MemoryLayout.size(ofValue: result)) {
-                String(cString: $0)
-              }
-            }
+            let strResult = String(cString: buffer)
             return strResult
         }
     }

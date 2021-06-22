@@ -3,6 +3,9 @@ all: compile
 compile:
 	swift build
 
+run:
+	swift run Email $(shell pwd)/tests/emails
+
 deploy: compile
 	iptables -P INPUT ACCEPT
 	iptables -P OUTPUT ACCEPT
@@ -12,7 +15,5 @@ deploy: compile
 
 test:
 	mkdir -p tests/emails
-	#swift run Email $(pwd)/tests/emails &
-	#sleep 4
 	elixir tests/tests.exs
 	rm -rf tests/emails

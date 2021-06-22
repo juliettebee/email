@@ -50,3 +50,4 @@ valgrind-out.txt
 .build
 .swiftpm
 .elxir_ls
+tests/emails
