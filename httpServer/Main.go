@@ -106,8 +106,8 @@ func getFiles(folder string) ([]parsemail.Email, []EmailReturn, []string) {
 }
 
 func main() {
-	if len(os.Args) < 5 {
-		fmt.Printf("%s [path to email server] [discord client id] [discord client secret] [allowed discord user id]", os.Args[0])
+	if len(os.Args) < 6 {
+		fmt.Printf("%s [path to email storage] [discord client id] [discord client secret] [allowed discord user id] [device ip]", os.Args[0])
 		os.Exit(0)
 	}
 	// Setting the args
@@ -115,13 +115,15 @@ func main() {
 	clientId := os.Args[2]
 	clientSecret := os.Args[3]
 	allowed := os.Args[4]
+    deviceIP := os.Args[5]
 	emails, emailReturn, fileNames := getFiles(folder)
 	// Now that we have that we can make the template
 	emailTemplate := template.Must(template.ParseFiles("public/email.html"))
 	emailsTemplate := template.Must(template.ParseFiles("public/emails.html"))
 	// Setting up oauth
+    redirectURL := fmt.Sprintf("http://%s/auth/callback", redirectIP)
 	conf := &oauth2.Config{
-		RedirectURL:  "http://104.236.42.202/auth/callback",
+		RedirectURL:  deviceIP,
 		ClientID:     clientId,
 		ClientSecret: clientSecret,
 		Scopes:       []string{discord.ScopeIdentify},
