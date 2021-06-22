@@ -56,14 +56,43 @@ defmodule DataTests do
     "
     Helper.connect_and_send_data message
 
-    file = File.cwd! <> "/tests/emails/*" |>
-      Path.wildcard |>
-      hd 
-
-    {:ok, contents} = File.read file
-
-    File.rm file
+    contents = Helper.get_contents_of_newest_email 
 
     assert message == contents 
+  end
+
+  test "Email with emojis" do
+    message = "
+    From: Tests <tests@test> 
+    To: Tests <test@test> 
+    Subject: Test message
+
+    Hello!
+    😀😔😩🏳️‍🌈🏳
+    \r\n.\r\n
+    "
+    Helper.connect_and_send_data message
+
+    contents = Helper.get_contents_of_newest_email 
+
+    assert message == contents 
+  end
+
+  test "Email with non-english characters" do
+    message = "
+    From: Tests <tests@test> 
+    To: Tests <test@test> 
+    Subject: Test message
+
+    Bonjour!
+    Comme ça va? é à û.
+    \r\n.\r\n
+    "
+    Helper.connect_and_send_data message
+
+    contents = Helper.get_contents_of_newest_email 
+
+    assert message == contents 
+
   end
 end

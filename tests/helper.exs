@@ -20,4 +20,16 @@ defmodule Helper do
 
     :gen_tcp.send(socket, "QUIT")
   end
+
+  def get_contents_of_newest_email do
+    file = File.cwd! <> "/tests/emails/*" |>
+      Path.wildcard |>
+      hd 
+
+    {:ok, contents} = File.read file
+
+    File.rm file
+
+    contents
+  end
 end
