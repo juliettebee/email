@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "Email",
+    platforms: [.macOS(.v11)],
     dependencies: [],
     targets: [
         .target(

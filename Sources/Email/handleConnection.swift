@@ -12,8 +12,6 @@ func handleConnection (connection: JSocket, folder: URL) {
     
     var dataMode = false
     
-//    let dataFile = URL(fileURLWithPath: folder.absoluteString).appendingPathComponent(DateFormatter.localizedString(from: Date(), dateStyle: .long, timeStyle: .long))
-    
     let dataFile = URL(fileURLWithPath: folder.absoluteString).appendingPathComponent(UUID().uuidString)
 
     while (true) {
@@ -33,7 +31,7 @@ func handleConnection (connection: JSocket, folder: URL) {
             do {
                 try contents.write(toFile: dataFile.path, atomically: false, encoding: .utf8)
             } catch {
-                print("Error (36), \(error)")
+                log("Error (36), \(error)")
             }
             
             if input.contains("\r\n.") {

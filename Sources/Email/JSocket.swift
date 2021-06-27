@@ -52,7 +52,7 @@ extension String {
         #endif
         
         if out == -1 {
-            print("Error \(errno)")
+            log("Error writing \(errno)")
         }
     }
 }

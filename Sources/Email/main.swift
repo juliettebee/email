@@ -11,7 +11,7 @@ let folder = URL(string: CommandLine.arguments[1])!
 let socketFd = socket(2, 1, 6)
 
 if socketFd == -1 {
-    print("Error creating socket, \(errno)")
+    log("Error creating socket, \(errno)")
     exit(EXIT_FAILURE)
 }
 
@@ -25,44 +25,44 @@ var res: UnsafeMutablePointer<addrinfo>? = nil
 let addrInfoResult = getaddrinfo(nil, "2525", &hints, &res)
 
 if addrInfoResult != 0 {
-print("Error getting address info: \(errno)")
-exit(EXIT_FAILURE)
+    log("Error getting address info: \(errno)")
+    exit(EXIT_FAILURE)
 }
 
 guard let addr = res?.pointee.ai_addr, let addrLen = res?.pointee.ai_addrlen else {
-print("Unable to get socket address")
-exit(EXIT_FAILURE)
+    log("Unable to get socket address")
+    exit(EXIT_FAILURE)
 }
 
 let bindResult = bind(socketFd, addr, socklen_t(addrLen))
 
 if bindResult != 0 {
-    print("Error binding, \(errno)")
+    log("Error binding, \(errno)")
     exit(EXIT_FAILURE)
 }
 
 let list = listen(socketFd, 10)
 
 if list == -1 {
-    print("Error listening")
+    log("Error listening")
     exit(EXIT_FAILURE)
 }
 
-print("Ready!")
+log("Ready!")
 
 while (true) {
     var addr = sockaddr()
     var addr_len: socklen_t = 0
-
+    
     let client = accept(socketFd, &addr, &addr_len)
-
+    
     if client == -1 {
-        print("Error accepting client")
+        log("Error accepting client")
     }
-
+    
     let queue = DispatchQueue(label: "newSocket")
     queue.async {
-        print("New connection")
+        log("New connection")
         handleConnection(connection: JSocket(fd: client), folder: folder)
     }
 }
