@@ -50,7 +50,8 @@ if list == -1 {
 
 log("Ready!")
 
-sigignore(SIGPIPE)
+//sigignore(SIGPIPE)
+signal(SIGPIPE, SIG_IGN)
 
 while (true) {
     var addr = sockaddr()
