@@ -7,14 +7,19 @@
 
 import Foundation
 
-func handleConnection (connection: JSocket, folder: URL) {
-    "220 ESMTP Juliette's SMTP Server \n".write(connection)
+func handleConnection ( connection: inout JSocket, folder: URL) {
+    "220 ESMTP Juliette's SMTP Server \n".write(&connection)
     
     var dataMode = false
     
     let dataFile = URL(fileURLWithPath: folder.absoluteString).appendingPathComponent(UUID().uuidString)
 
     while (true) {
+        
+        if connection.closed {
+            return
+        }
+        
         let input = connection.read()
         
         if dataMode {
@@ -36,7 +41,7 @@ func handleConnection (connection: JSocket, folder: URL) {
             
             if input.contains("\r\n.") {
                 dataMode = false
-                "250 Ok\n".write(connection)
+                "250 Ok\n".write(&connection)
             }
             continue
         }
@@ -50,19 +55,19 @@ func handleConnection (connection: JSocket, folder: URL) {
         
         switch command {
         case "HELO":
-            "250 Hello\n".write(connection)
+            "250 Hello\n".write(&connection)
         case "MAIL FROM":
-            "250 Ok\n".write(connection)
+            "250 Ok\n".write(&connection)
         case "RCPT TO":
-            "250 Ok\n".write(connection)
+            "250 Ok\n".write(&connection)
         case "DATA":
             dataMode = true
-            "354 End data with <CR><LF>.<CR><LF>\n".write(connection)
+            "354 End data with <CR><LF>.<CR><LF>\n".write(&connection)
         case "QUIT":
             connection.close()
             return
         default:
-            "500 I don't know that\n".write(connection)
+            "500 I don't know that\n".write(&connection)
         }
     }
 }

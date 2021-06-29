@@ -50,6 +50,8 @@ if list == -1 {
 
 log("Ready!")
 
+sigignore(SIGPIPE)
+
 while (true) {
     var addr = sockaddr()
     var addr_len: socklen_t = 0
@@ -63,6 +65,7 @@ while (true) {
     let queue = DispatchQueue(label: "newSocket")
     queue.async {
         log("New connection")
-        handleConnection(connection: JSocket(fd: client), folder: folder)
+        var jsock = JSocket(fd: client)
+        handleConnection(connection: &jsock, folder: folder)
     }
 }

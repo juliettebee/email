@@ -32,4 +32,12 @@ defmodule Helper do
 
     contents
   end
+
+  def server_is_up do
+    {:ok, socket} = :gen_tcp.connect('localhost', 2525, [:binary, active: false])
+    {:ok, message} = :gen_tcp.recv(socket, 0)
+    :gen_tcp.send(socket, "quit")
+
+    message
+  end
 end

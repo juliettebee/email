@@ -5,9 +5,7 @@ defmodule ConnectionTests do
   use ExUnit.Case, async: true
 
   test "Server is up" do
-    {:ok, socket} = :gen_tcp.connect('localhost', 2525, [:binary, active: false])
-    {:ok, message} = :gen_tcp.recv(socket, 0)
-    :gen_tcp.send(socket, "QUIT")
+    message = Helper.server_is_up 
     assert message == "220 ESMTP Juliette's SMTP Server \n"
   end
 end
@@ -96,3 +94,19 @@ defmodule DataTests do
 
   end
 end
+
+defmodule TriggerKill do
+  use ExUnit.Case, async: true
+
+  test "SIGPIPE code 13" do
+      # SIGPIPE is triggered when a process writes to a pipe without an active connection on the other side.
+    {:ok, socket} = :gen_tcp.connect('localhost', 2525, [:binary, active: false])
+    {:ok, _} = :gen_tcp.recv(socket, 0)
+    :gen_tcp.send(socket, "HELO")
+    :gen_tcp.close socket
+    # Now checking if server is still up
+    message = Helper.server_is_up 
+    assert message == "220 ESMTP Juliette's SMTP Server \n"
+  end
+end
+
