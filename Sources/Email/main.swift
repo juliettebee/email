@@ -2,11 +2,13 @@ import Foundation
 
 let arguments = CommandLine.arguments
 
-if arguments.count < 2 {
-    print("\(arguments[0]) [Path to email storage folder]")
+if arguments.count < 3 {
+    print("\(arguments[0]) [Path to email storage folder] [Domain]")
+    exit(EXIT_SUCCESS)
 }
 
 let folder = URL(string: CommandLine.arguments[1])!
+let domain = CommandLine.arguments[2]
 
 let socketFd = socket(2, 1, 6)
 
@@ -67,6 +69,6 @@ while (true) {
     queue.async {
         log("New connection")
         var jsock = JSocket(fd: client)
-        handleConnection(connection: &jsock, folder: folder)
+        handleConnection(connection: &jsock, folder: folder, domain: domain)
     }
 }
